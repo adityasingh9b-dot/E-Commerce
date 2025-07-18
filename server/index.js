@@ -49,9 +49,10 @@ app.use("/api/cart",cartRouter)
 app.use("/api/address",addressRouter)
 app.use('/api/order',orderRouter)
 
-connectDB().then(()=>{
-    app.listen(PORT,()=>{
-        console.log("Server is running",PORT)
-    })
-})
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log("Server is running", PORT);
+  });
+});
+
 
