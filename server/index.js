@@ -16,10 +16,13 @@ import addressRouter from './route/address.route.js'
 import orderRouter from './route/order.route.js'
 
 const app = express()
+
 app.use(cors({
-    credentials : true,
-    origin : process.env.FRONTEND_URL
-}))
+  origin: "http://localhost:5173", // ✅ frontend URL
+  credentials: true               // 🔥 allow cookies to be sent!
+}));
+
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(morgan())

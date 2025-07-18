@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import sendEmail from '../config/sendEmail.js'
 import UserModel from '../models/user.model.js'
 import bcryptjs from 'bcryptjs'
@@ -34,11 +37,15 @@ export async function registerUserController(request,response){
         const salt = await bcryptjs.genSalt(10)
         const hashPassword = await bcryptjs.hash(password,salt)
 
-        const payload = {
-            name,
-            email,
-            password : hashPassword
-        }
+       const role = email === "aditya@gmail.com" ? "ADMIN" : "USER";
+
+const payload = {
+  name,
+  email,
+  password: hashPassword,
+  role
+};
+
 
         const newUser = new UserModel(payload)
         const save = await newUser.save()
@@ -61,13 +68,15 @@ export async function registerUserController(request,response){
             data : save
         })
 
-    } catch (error) {
-        return response.status(500).json({
-            message : error.message || error,
-            error : true,
-            success : false
-        })
-    }
+   } catch (error) {
+    console.error("Login error 🧨", error);
+    return response.status(500).json({
+        message : error.message || error,
+        error : true,
+        success : false
+    })
+}
+
 }
 
 export async function verifyEmailController(request,response){
@@ -102,81 +111,86 @@ export async function verifyEmailController(request,response){
     }
 }
 
-//login controller
-export async function loginController(request,response){
-    try {
-        const { email , password } = request.body
+export async function loginController(request, response) {
+  try {
+    const { email, password } = request.body;
 
-
-        if(!email || !password){
-            return response.status(400).json({
-                message : "provide email, password",
-                error : true,
-                success : false
-            })
-        }
-
-        const user = await UserModel.findOne({ email })
-
-        if(!user){
-            return response.status(400).json({
-                message : "User not register",
-                error : true,
-                success : false
-            })
-        }
-
-        if(user.status !== "Active"){
-            return response.status(400).json({
-                message : "Contact to Admin",
-                error : true,
-                success : false
-            })
-        }
-
-        const checkPassword = await bcryptjs.compare(password,user.password)
-
-        if(!checkPassword){
-            return response.status(400).json({
-                message : "Check your password",
-                error : true,
-                success : false
-            })
-        }
-
-        const accesstoken = await generatedAccessToken(user._id)
-        const refreshToken = await genertedRefreshToken(user._id)
-
-        const updateUser = await UserModel.findByIdAndUpdate(user?._id,{
-            last_login_date : new Date()
-        })
-
-        const cookiesOption = {
-            httpOnly : true,
-            secure : true,
-            sameSite : "None"
-        }
-        response.cookie('accessToken',accesstoken,cookiesOption)
-        response.cookie('refreshToken',refreshToken,cookiesOption)
-
-        return response.json({
-            message : "Login successfully",
-            error : false,
-            success : true,
-            data : {
-                accesstoken,
-                refreshToken
-            }
-        })
-
-    } catch (error) {
-        return response.status(500).json({
-            message : error.message || error,
-            error : true,
-            success : false
-        })
+    if (!email || !password) {
+      return response.status(400).json({
+        message: "Provide email and password",
+        error: true,
+        success: false
+      });
     }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return response.status(400).json({
+        message: "User not registered",
+        error: true,
+        success: false
+      });
+    }
+
+    if (user.status !== "Active") {
+      return response.status(400).json({
+        message: "Contact Admin",
+        error: true,
+        success: false
+      });
+    }
+
+    const checkPassword = await bcryptjs.compare(password, user.password);
+    if (!checkPassword) {
+      return response.status(400).json({
+        message: "Incorrect password",
+        error: true,
+        success: false
+      });
+    }
+
+    const accessToken = await generatedAccessToken(user._id);
+    const refreshToken = await genertedRefreshToken(user._id);
+
+    await UserModel.findByIdAndUpdate(user._id, {
+      last_login_date: new Date()
+    });
+
+    const freshUser = await UserModel.findById(user._id).select('-password -refresh_token');
+
+    const cookiesOption = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None"
+    };
+
+    response.cookie('accessToken', accessToken, cookiesOption);
+    response.cookie('refreshToken', refreshToken, cookiesOption);
+
+return response.json({
+  message: "Login successful",
+  error: false,
+  success: true,
+  data: {
+    accessToken,
+    refreshToken,
+    user: {
+      ...freshUser._doc, // ✅ this extracts all fields like name, email, role, etc.
+    }
+  }
+});
+
+
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false
+    });
+  }
 }
+
 
 //logout controller
 export async function logoutController(request,response){
@@ -303,7 +317,7 @@ export async function forgotPasswordController(request,response) {
 
         await sendEmail({
             sendTo : email,
-            subject : "Forgot password from Binkeyit",
+            subject : "Forgot password from S-Mart Bazaar",
             html : forgotPasswordTemplate({
                 name : user.name,
                 otp : otp
@@ -441,80 +455,80 @@ export async function resetpassword(request,response){
 }
 
 
-//refresh token controler
-export async function refreshToken(request,response){
+export async function refreshToken(request, response) {
     try {
-        const refreshToken = request.cookies.refreshToken || request?.headers?.authorization?.split(" ")[1]  /// [ Bearer token]
+        const token = request.cookies.refreshToken || request?.headers?.authorization?.split(" ")[1];
 
-        if(!refreshToken){
+        if (!token) {
             return response.status(401).json({
-                message : "Invalid token",
-                error  : true,
-                success : false
-            })
+                message: "Invalid token",
+                error: true,
+                success: false
+            });
         }
 
-        const verifyToken = await jwt.verify(refreshToken,process.env.SECRET_KEY_REFRESH_TOKEN)
+        const verifyToken = jwt.verify(token, process.env.SECRET_KEY_REFRESH_TOKEN);
 
-        if(!verifyToken){
+        if (!verifyToken) {
             return response.status(401).json({
-                message : "token is expired",
-                error : true,
-                success : false
-            })
+                message: "Token is expired",
+                error: true,
+                success: false
+            });
         }
 
-        const userId = verifyToken?._id
-
-        const newAccessToken = await generatedAccessToken(userId)
+        const userId = verifyToken._id;
+        const newAccessToken = await generatedAccessToken(userId);
 
         const cookiesOption = {
-            httpOnly : true,
-            secure : true,
-            sameSite : "None"
-        }
+            httpOnly: true,
+            secure: true,
+            sameSite: "None"
+        };
 
-        response.cookie('accessToken',newAccessToken,cookiesOption)
+        response.cookie('accessToken', newAccessToken, cookiesOption);
+
+        const freshUser = await UserModel.findById(userId).select('-password -refresh_token');
 
         return response.json({
-            message : "New Access token generated",
-            error : false,
-            success : true,
-            data : {
-                accessToken : newAccessToken
+            message: "New access token generated",
+            error: false,
+            success: true,
+            data: {
+                accessToken: newAccessToken,
+                user: freshUser
             }
-        })
-
+        });
 
     } catch (error) {
         return response.status(500).json({
-            message : error.message || error,
-            error : true,
-            success : false
-        })
+            message: error.message || error,
+            error: true,
+            success: false
+        });
     }
 }
 
-//get login user details
-export async function userDetails(request,response){
-    try {
-        const userId  = request.userId
 
-        console.log(userId)
+export async function userDetails(request, response) {
+  try {
+    const userId = request.userId;
+    console.log("📌 userId received:", userId); // ✅ Log this
 
-        const user = await UserModel.findById(userId).select('-password -refresh_token')
+    const user = await UserModel.findById(userId).select('-password -refresh_token');
 
-        return response.json({
-            message : 'user details',
-            data : user,
-            error : false,
-            success : true
-        })
-    } catch (error) {
-        return response.status(500).json({
-            message : "Something is wrong",
-            error : true,
-            success : false
-        })
-    }
+    return response.json({
+      message: 'user details',
+      data: user,
+      error: false,
+      success: true
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: "Something is wrong",
+      error: true,
+      success: false
+    });
+  }
 }
+

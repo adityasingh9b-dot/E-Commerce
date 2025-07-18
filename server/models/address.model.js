@@ -19,10 +19,11 @@ const addressSchema = new mongoose.Schema({
     country : {
         type : String
     },
-    mobile : {
-        type : Number,
-        default : null
-    },
+   mobile: {
+  type: Number,
+  default: null
+},
+
     status : {
         type : Boolean,
         default : true

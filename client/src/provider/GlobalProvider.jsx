@@ -131,12 +131,14 @@ const GlobalProvider = ({children}) => {
       }
     }
 
-    useEffect(()=>{
-      fetchCartItem()
-      handleLogoutOut()
-      fetchAddress()
-      fetchOrder()
-    },[user])
+   useEffect(() => {
+  if (user) {
+    fetchCartItem()
+    fetchAddress()
+    fetchOrder()
+  }
+}, [user])
+
     
     return(
         <GlobalContext.Provider value={{

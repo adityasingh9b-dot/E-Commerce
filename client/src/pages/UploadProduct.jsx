@@ -109,43 +109,44 @@ const UploadProduct = () => {
     setOpenAddField(false)
   }
 
-  const handleSubmit = async(e)=>{
-    e.preventDefault()
-    console.log("data",data)
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log("data before sending", data);
 
-    try {
-      const response = await Axios({
-          ...SummaryApi.createProduct,
-          data : data
-      })
-      const { data : responseData} = response
+  // ✅ Send only IDs for category and subCategory
+  const payload = {
+    ...data,
+    category: data.category.map((c) => c._id),
+    subCategory: data.subCategory.map((sc) => sc._id),
+  };
 
-      if(responseData.success){
-          successAlert(responseData.message)
-          setData({
-            name : "",
-            image : [],
-            category : [],
-            subCategory : [],
-            unit : "",
-            stock : "",
-            price : "",
-            discount : "",
-            description : "",
-            more_details : {},
-          })
+  try {
+    const response = await Axios({
+      ...SummaryApi.createProduct,
+      data: payload,
+    });
+    const { data: responseData } = response;
 
-      }
-    } catch (error) {
-        AxiosToastError(error)
+    if (responseData.success) {
+      successAlert(responseData.message);
+      setData({
+        name: "",
+        image: [],
+        category: [],
+        subCategory: [],
+        unit: "",
+        stock: "",
+        price: "",
+        discount: "",
+        description: "",
+        more_details: {},
+      });
     }
-
-
+  } catch (error) {
+    AxiosToastError(error);
   }
+};
 
-  // useEffect(()=>{
-  //   successAlert("Upload successfully")
-  // },[])
   return (
     <section className=''>
         <div className='p-2   bg-white shadow-md flex items-center justify-between'>

@@ -1,18 +1,17 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
-import isAdmin from '../utils/isAdmin'
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Navigate } from 'react-router-dom';
 
-const AdminPermision = ({children}) => {
-    const user = useSelector(state => state.user)
+const AdminPermision = ({ children }) => {
+  const user = useSelector((state) => state.user);
 
+  // Fix: Properly handle unauthenticated or non-admin users
+  if (!user || user.role !== 'ADMIN') {
+    return <Navigate to="/" replace />;
+  }
 
-  return (
-    <>
-        {
-            isAdmin(user.role) ?  children : <p className='text-red-600 bg-red-100 p-4'>Do not have permission</p>
-        }
-    </>
-  )
-}
+  return children;
+};
 
-export default AdminPermision
+export default AdminPermision;
+

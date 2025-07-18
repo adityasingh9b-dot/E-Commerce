@@ -11,10 +11,22 @@ import image2 from '../assets/Best_Prices_Offers.png'
 import image3 from '../assets/Wide_Assortment.png'
 import { pricewithDiscount } from '../utils/PriceWithDiscount'
 import AddToCartButton from '../components/AddToCartButton'
+import { useNavigate } from 'react-router-dom';
 
 const ProductDisplayPage = () => {
   const params = useParams()
-  let productId = params?.product?.split("-")?.slice(-1)[0]
+  const navigate = useNavigate();
+const productId = params?.product?.split("-")?.slice(-1)[0];
+
+// Check for valid MongoDB ObjectId
+useEffect(() => {
+  const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(productId);
+  if (!isValidMongoId) {
+    console.warn("❌ Invalid product ID:", productId);
+    navigate("/"); // Redirect or show 404
+  }
+}, [productId]);
+
   const [data,setData] = useState({
     name : "",
     image : []
@@ -164,7 +176,7 @@ const ProductDisplayPage = () => {
               }
            
 
-            <h2 className='font-semibold'>Why shop from binkeyit? </h2>
+            <h2 className='font-semibold'>Why shop from S-Mart Bazar? </h2>
             <div>
                   <div className='flex  items-center gap-4 my-4'>
                       <img

@@ -16,6 +16,7 @@ import CategoryPage from "../pages/CategoryPage";
 import SubCategoryPage from "../pages/SubCategoryPage";
 import UploadProduct from "../pages/UploadProduct";
 import ProductAdmin from "../pages/ProductAdmin";
+import AdminPanel from "../pages/AdminPanel";
 import AdminPermision from "../layouts/AdminPermision";
 import ProductListPage from "../pages/ProductListPage";
 import ProductDisplayPage from "../pages/ProductDisplayPage";
@@ -24,11 +25,19 @@ import CheckoutPage from "../pages/CheckoutPage";
 import Success from "../pages/Success";
 import Cancel from "../pages/Cancel";
 
+
 const router = createBrowserRouter([
     {
         path : "/",
         element : <App/>,
         children : [
+{
+  path: "admin",
+  element: <AdminPanel /> // ✅ no wrapper
+}
+,
+
+        
             {
                 path : "",
                 element : <Home/>
@@ -73,7 +82,7 @@ const router = createBrowserRouter([
                         path : "myorders",
                         element : <MyOrders/>
                     },
-                    {
+                   {
                         path : "address",
                         element : <Address/>
                     },
