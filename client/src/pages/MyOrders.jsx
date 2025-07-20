@@ -113,7 +113,6 @@ if (effectiveUser?.role !== 'ADMIN') {
                 item?.quantity ??
                 item?.qty ??
                 null;
-
               return (
                 <div key={i} className='flex gap-3 mt-2 items-center'>
                   <img
@@ -142,8 +141,6 @@ if (effectiveUser?.role !== 'ADMIN') {
     Delete Order
   </button>
 )}
-
-            
           </div>
         ))
       )}
