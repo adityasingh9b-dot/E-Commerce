@@ -16,18 +16,33 @@ console.log("👤 Effective User (Redux or LocalStorage):", effectiveUser);
 console.log("🔐 Effective User Role:", effectiveUser?.role);
 
 const handleDelete = async (orderId) => {
-  console.log("👮‍♂️ Role of logged in user:", effectiveUser?.role);
   if (!window.confirm("Are you sure you want to delete this order?")) return;
 
   try {
     await axios.delete(`/api/order/${orderId}`);
-    dispatch(setOrder(orders.filter((order) => order._id !== orderId)));
     alert("✅ Order deleted successfully");
+
+    // 🔁 Refetch latest from server to ensure sync
+    const res = await axios.get('/api/order/order-list');
+    let freshOrders = Array.isArray(res.data.data) ? res.data.data : [];
+
+    if (effectiveUser?.role !== 'ADMIN') {
+      freshOrders = freshOrders.filter((order) => {
+        const orderUserId =
+          typeof order.userId === 'string'
+            ? order.userId
+            : order.userId?._id;
+        return orderUserId?.toString() === effectiveUser?._id?.toString();
+      });
+    }
+
+    dispatch(setOrder(freshOrders.reverse()));
   } catch (error) {
     console.error("❌ Error deleting order:", error);
     alert("⚠️ Failed to delete order");
   }
 };
+
 
 
 useEffect(() => {

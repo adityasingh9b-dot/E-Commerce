@@ -198,7 +198,7 @@ export async function webhookStripe(request, response) {
 
   response.json({ received: true });
 }
-
+// ✅ GET all orders — admin gets all, user gets their own
 export async function getOrderDetailsController(request, response) {
   try {
     console.log("🔍 getOrderDetailsController called; request.userId =", request.userId);
@@ -214,54 +214,63 @@ export async function getOrderDetailsController(request, response) {
     }
 
     const user = await UserModel.findById(userId);
-    console.log("✅ Found user:", user?._id, "role:", user?.role);
+    if (!user) {
+      return response.status(404).json({
+        message: "User not found",
+        error: true,
+        success: false,
+      });
+    }
 
-    const isAdmin = user?.role === "ADMIN";
+    console.log("✅ Found user:", user._id, "role:", user.role);
+
+    const isAdmin = user.role === "ADMIN";
     const filter = isAdmin ? {} : { userId };
-    let orders = await OrderModel.find(filter).sort({ createdAt: -1 }).lean();
-    console.log("📦 Raw orders count:", orders.length);
 
-    // Ensure productId is ObjectId
-    orders = orders.filter(order =>
-      order.products.every(p =>
-        mongoose.Types.ObjectId.isValid(p.productId)
-      )
-    );
-    console.log("✅ Orders after productId validation:", orders.length);
-
-    const finalOrderList = await OrderModel.find({
-      _id: { $in: orders.map(o => o._id) }
-    })
+    const orders = await OrderModel.find(filter)
       .sort({ createdAt: -1 })
       .populate('delivery_address', 'address_line city state pincode country mobile')
-      .populate("userId", "name email")
-      .populate("products.productId", "name image price discount quantity")
+      .populate('userId', 'name email')
+      .populate('products.productId', 'name image price discount quantity')
       .lean();
 
-    console.log("🧾 FinalOrderList:", finalOrderList);
+    // Optionally filter out any corrupted order (invalid productId)
+    const validOrders = orders.filter(order =>
+      order.products.every(p =>
+        mongoose.Types.ObjectId.isValid(p.productId?._id || p.productId)
+      )
+    );
+
+    console.log("📦 Total orders fetched:", orders.length);
+    console.log("✅ Valid orders after filtering:", validOrders.length);
 
     return response.json({
       message: "Order list",
-      data: finalOrderList,
+      data: validOrders,
       error: false,
       success: true,
     });
+
   } catch (error) {
     console.error("🔥 Error in getOrderDetailsController:", error);
     return response.status(500).json({
-      message: error.message || error,
+      message: error.message || "Internal server error",
       error: true,
       success: false,
     });
   }
 }
 
-// ✅ DELETE Order by ID (Admin only)
+
 export async function deleteOrderController(req, res) {
   try {
     const orderId = req.params.id;
+    console.log("🗑️ DELETE called for order ID:", orderId);
+    console.log("🔐 User attempting delete:", req.userId);
 
+    // 🛑 Validate Mongo ID format
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      console.error("❌ Invalid ObjectId:", orderId);
       return res.status(400).json({
         message: "Invalid order ID",
         error: true,
@@ -269,9 +278,13 @@ export async function deleteOrderController(req, res) {
       });
     }
 
+    // ✅ Attempt deletion
     const deleted = await OrderModel.findByIdAndDelete(orderId);
+    console.log("📦 Deleted Order:", deleted);
 
+    // ❌ Nothing was deleted
     if (!deleted) {
+      console.warn("⚠️ No order found with ID:", orderId);
       return res.status(404).json({
         message: "Order not found",
         error: true,
@@ -279,12 +292,14 @@ export async function deleteOrderController(req, res) {
       });
     }
 
+    // ✅ Success
     return res.json({
       message: "Order deleted successfully",
       success: true,
       error: false,
     });
   } catch (error) {
+    console.error("🔥 Error in deleteOrderController:", error);
     return res.status(500).json({
       message: error.message || error,
       error: true,
