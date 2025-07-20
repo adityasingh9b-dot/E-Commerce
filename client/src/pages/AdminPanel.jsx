@@ -36,9 +36,10 @@ const AdminPanel = () => {
         </Link>
 
         {/* ✅ Updated this link to point to admin order view */}
-        <Link to="/dashboard/admin-orders" className="bg-red-600 text-white p-4 rounded-lg shadow hover:bg-red-700 transition">
-          📑 View Orders
-        </Link>
+        <Link to="/dashboard/myorders" className="bg-red-600 text-white p-4 rounded-lg shadow hover:bg-red-700 transition">
+  📑 View Orders
+</Link>
+
 
       </div>
     </div>

@@ -7,43 +7,68 @@ import { setOrder } from "../store/orderSlice";
 const MyOrders = () => {
   const dispatch = useDispatch();
   const orders = useSelector((state) => state.orders?.order || []);
-  const user = useSelector((state) => state.auth?.user);
+const reduxUser = useSelector((state) => state.user?.user);
+const localUser = JSON.parse(localStorage.getItem("user"));
+const effectiveUser = reduxUser || localUser?.data || {};
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await axios.get('/api/order/order-list');
-        console.log("✅ API Response:", res.data);
 
-        // API returns { success, error, message, data: [...] }
-        let fetchedOrders = Array.isArray(res.data.data) ? res.data.data : [];
-        console.log("📦 Fetched Orders (before filter):", fetchedOrders);
+console.log("👤 Effective User (Redux or LocalStorage):", effectiveUser);
+console.log("🔐 Effective User Role:", effectiveUser?.role);
 
-        // 🔐 Normal user ko sirf apne hi orders dikhane hain
-        if (user && user.role !== 'ADMIN') {
-          fetchedOrders = fetchedOrders.filter((order) => {
-            const orderUserId =
-              typeof order.userId === 'string'
-                ? order.userId
-                : order.userId?._id;
-            return orderUserId?.toString() === user?._id?.toString();
-          });
-          console.log("🔒 Filtered Orders for User:", fetchedOrders);
-        }
+const handleDelete = async (orderId) => {
+  console.log("👮‍♂️ Role of logged in user:", effectiveUser?.role);
+  if (!window.confirm("Are you sure you want to delete this order?")) return;
 
-        // reverse karke latest top pe
-        const reversed = [...fetchedOrders].reverse();
-        dispatch(setOrder(reversed));
-        console.log("🚀 Orders stored in Redux:", reversed);
-      } catch (err) {
-        console.error('❌ Error fetching orders:', err);
+  try {
+    await axios.delete(`/api/order/${orderId}`);
+    dispatch(setOrder(orders.filter((order) => order._id !== orderId)));
+    alert("✅ Order deleted successfully");
+  } catch (error) {
+    console.error("❌ Error deleting order:", error);
+    alert("⚠️ Failed to delete order");
+  }
+};
+
+
+useEffect(() => {
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get('/api/order/order-list');
+      console.log("📦 API Response from /api/order/order-list:", res.data);
+
+      let fetchedOrders = Array.isArray(res.data.data) ? res.data.data : [];
+
+      console.log("📥 Fetched Orders (before filtering):", fetchedOrders);
+
+      // Filter for non-admin users only
+if (effectiveUser?.role !== 'ADMIN') {
+  fetchedOrders = fetchedOrders.filter((order) => {
+    const orderUserId =
+      typeof order.userId === 'string'
+        ? order.userId
+        : order.userId?._id;
+    return orderUserId?.toString() === effectiveUser?._id?.toString();
+  });
+        console.log("🔐 Filtered Orders for Normal User:", fetchedOrders);
+      } else {
+        console.log("🛠 Admin detected. Showing ALL orders.");
       }
-    };
 
+      const reversed = [...fetchedOrders].reverse();
+      dispatch(setOrder(reversed));
+    } catch (err) {
+      console.error('❌ Error fetching orders:', err.message);
+    }
+  };
+
+  // Only fetch if orders not already loaded
+  if (!orders || orders.length === 0) {
     fetchOrders();
-  }, [dispatch, user]);
+  }
+}, []); // ✅ empty dependency array
 
-  console.log("📊 Redux Orders in UI:", orders);
+
+  console.log("\ud83d\udcca Redux Orders in UI:", orders);
 
   return (
     <div>
@@ -83,7 +108,6 @@ const MyOrders = () => {
             </p>
 
             {(Array.isArray(order.products) ? order.products : []).map((item, i) => {
-              // 🌟 Safe quantity extraction
               const qty =
                 item?.product_details?.quantity ??
                 item?.quantity ??
@@ -109,6 +133,17 @@ const MyOrders = () => {
                 </div>
               );
             })}
+
+            {effectiveUser?.role === 'ADMIN' && (
+  <button
+    onClick={() => handleDelete(order._id)}
+    className="mt-4 bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600"
+  >
+    Delete Order
+  </button>
+)}
+
+            
           </div>
         ))
       )}

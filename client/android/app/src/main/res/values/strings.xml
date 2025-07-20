@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">S-Mart Bazaar Grocery Store</string>
+    <string name="title_activity_main">S-Mart Bazaar Grocery Store</string>
+    <string name="package_name">com.example.s_mart_grocery_store</string>
+    <string name="custom_url_scheme">com.example.s_mart_grocery_store</string>
+</resources>

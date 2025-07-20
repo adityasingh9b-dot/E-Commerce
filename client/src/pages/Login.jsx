@@ -34,35 +34,34 @@ const Login = () => {
         return;
       }
 
-      if (response.data.success) {
-        toast.success(response.data.message);
+if (response.data.success) {
+  toast.success(response.data.message);
 
-        const { accessToken, refreshToken, user } = response.data.data;
+  const { accessToken, refreshToken, user } = response.data.data;
 
-        // ✅ Save tokens to localStorage
-        if (accessToken && refreshToken) {
-          localStorage.setItem('accesstoken', accessToken);
-          localStorage.setItem('refreshToken', refreshToken);
-        } else {
-          console.warn("Tokens missing in response.");
-        }
+  if (accessToken && refreshToken) {
+    localStorage.setItem('accesstoken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+  }
 
-        // ✅ Dispatch user to Redux
-        dispatch(setUserDetails(user));
+  dispatch(setUserDetails(user));
 
-        // ✅ Reset form
-        setData({ email: "", password: "" });
+  // ✅ FIXED: Wrap user inside { data: ... }
+  localStorage.setItem("user", JSON.stringify({ data: user }));
 
-        // ✅ Navigate based on role
-        const role = user?.role || '';
-        console.log("👤 Logged in role:", role);
+  setData({ email: "", password: "" });
 
-        if (role === "ADMIN") {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
-      }
+  const role = user?.role || '';
+  console.log("👤 Logged in role:", role);
+
+  if (role === "ADMIN") {
+    navigate("/admin");
+  } else {
+    navigate("/");
+  }
+}
+
+
     } catch (error) {
       AxiosToastError(error);
     }

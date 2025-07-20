@@ -48,23 +48,33 @@ const UploadCategoryModel = ({close, fetchData}) => {
         }
     }
 
-    const handleUploadCategoryImage = async(e)=>{
-        const file = e.target.files[0]
+const handleUploadCategoryImage = async(e)=>{
+    const file = e.target.files[0]
 
-        if(!file){
+    if(!file){
+        return
+    }
+
+    try {
+        const response = await uploadImage(file)
+        const ImageResponse = response?.data
+
+        if (!ImageResponse?.data?.url) {
+            toast.error("Image upload failed. Try again.")
             return
         }
 
-        const response = await uploadImage(file)
-        const { data : ImageResponse } = response
-
-        setData((preve)=>{
-            return{
-                ...preve,
-                image : ImageResponse.data.url
-            }
-        })
+        setData((preve)=>({
+            ...preve,
+            image : ImageResponse.data.url
+        }))
+    } catch (error) {
+        console.error("Image Upload Error:", error)
+        toast.error("Something went wrong during image upload.")
     }
+}
+
+
   return (
     <section className='fixed top-0 bottom-0 left-0 right-0 p-4 bg-neutral-800 bg-opacity-60 flex items-center justify-center'>
         <div className='bg-white max-w-4xl w-full p-4 rounded'>

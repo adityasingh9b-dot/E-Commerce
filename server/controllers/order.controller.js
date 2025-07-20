@@ -256,4 +256,42 @@ export async function getOrderDetailsController(request, response) {
   }
 }
 
+// ✅ DELETE Order by ID (Admin only)
+export async function deleteOrderController(req, res) {
+  try {
+    const orderId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        message: "Invalid order ID",
+        error: true,
+        success: false,
+      });
+    }
+
+    const deleted = await OrderModel.findByIdAndDelete(orderId);
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Order not found",
+        error: true,
+        success: false,
+      });
+    }
+
+    return res.json({
+      message: "Order deleted successfully",
+      success: true,
+      error: false,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+
 
