@@ -19,11 +19,16 @@ const handleDelete = async (orderId) => {
   if (!window.confirm("Are you sure you want to delete this order?")) return;
 
   try {
-    await axios.delete(`/api/order/${orderId}`);
+    await axios.delete(`https://ecommerce-backend-gh79.onrender.com/api/order/${orderId}`, {
+  withCredentials: true
+});
+
     alert("✅ Order deleted successfully");
 
-    // 🔁 Refetch latest from server to ensure sync
-    const res = await axios.get('/api/order/order-list');
+const res = await axios.get('https://ecommerce-backend-gh79.onrender.com/api/order/order-list', {
+  withCredentials: true
+});
+
     let freshOrders = Array.isArray(res.data.data) ? res.data.data : [];
 
     if (effectiveUser?.role !== 'ADMIN') {
@@ -48,7 +53,10 @@ const handleDelete = async (orderId) => {
 useEffect(() => {
   const fetchOrders = async () => {
     try {
-      const res = await axios.get('/api/order/order-list');
+      const res = await axios.get('https://ecommerce-backend-gh79.onrender.com/api/order/order-list', {
+  withCredentials: true
+});
+
       console.log("📦 API Response from /api/order/order-list:", res.data);
 
       let fetchedOrders = Array.isArray(res.data.data) ? res.data.data : [];

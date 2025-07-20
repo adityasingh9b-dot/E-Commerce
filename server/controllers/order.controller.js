@@ -1,9 +1,9 @@
+import mongoose from "mongoose";
 import Stripe from "../config/stripe.js";
 import CartProductModel from "../models/cartproduct.model.js";
 import OrderModel from "../models/order.model.js";
 import UserModel from "../models/user.model.js";
 import ProductModel from "../models/product.model.js";
-import mongoose from "mongoose";
 
 // ✅ Cash on Delivery
 export async function CashOnDeliveryOrderController(request, response) {
