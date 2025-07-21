@@ -54,8 +54,8 @@ useEffect(() => {
   const fetchOrders = async () => {
     try {
       const res = await axios.get('https://ecommerce-backend-gh79.onrender.com/api/order/order-list', {
-  withCredentials: true
-});
+        withCredentials: true
+      });
 
       console.log("📦 API Response from /api/order/order-list:", res.data);
 
@@ -63,15 +63,14 @@ useEffect(() => {
 
       console.log("📥 Fetched Orders (before filtering):", fetchedOrders);
 
-      // Filter for non-admin users only
-if (effectiveUser?.role !== 'ADMIN') {
-  fetchedOrders = fetchedOrders.filter((order) => {
-    const orderUserId =
-      typeof order.userId === 'string'
-        ? order.userId
-        : order.userId?._id;
-    return orderUserId?.toString() === effectiveUser?._id?.toString();
-  });
+      if (effectiveUser?.role !== 'ADMIN') {
+        fetchedOrders = fetchedOrders.filter((order) => {
+          const orderUserId =
+            typeof order.userId === 'string'
+              ? order.userId
+              : order.userId?._id;
+          return orderUserId?.toString() === effectiveUser?._id?.toString();
+        });
         console.log("🔐 Filtered Orders for Normal User:", fetchedOrders);
       } else {
         console.log("🛠 Admin detected. Showing ALL orders.");
@@ -84,11 +83,13 @@ if (effectiveUser?.role !== 'ADMIN') {
     }
   };
 
-  // Only fetch if orders not already loaded
-  if (!orders || orders.length === 0) {
-    fetchOrders();
-  }
-}, []); // ✅ empty dependency array
+  fetchOrders(); // ⏱️ Initial fetch on mount
+
+  const intervalId = setInterval(fetchOrders, 5000); // 🔁 Auto-refresh every 5s
+
+  return () => clearInterval(intervalId); // 🔄 Clear interval on unmount
+}, [effectiveUser]); // 🔍 Depend on user login state
+
 
 
   console.log("\ud83d\udcca Redux Orders in UI:", orders);
