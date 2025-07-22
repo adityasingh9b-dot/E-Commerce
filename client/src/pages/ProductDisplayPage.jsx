@@ -186,7 +186,7 @@ useEffect(() => {
                       />
                       <div className='text-sm'>
                         <div className='font-semibold'>Superfast Delivery</div>
-                        <p>Get your orer delivered to your doorstep at the earliest from dark stores near you.</p>
+                        <p>Get your order delivered to your doorstep at the earliest from S-Mart Bazaar Grocery Store </p>
                       </div>
                   </div>
                   <div className='flex  items-center gap-4 my-4'>
@@ -197,7 +197,7 @@ useEffect(() => {
                       />
                       <div className='text-sm'>
                         <div className='font-semibold'>Best Prices & Offers</div>
-                        <p>Best price destination with offers directly from the nanufacturers.</p>
+                        <p>Best price destination with offers directly from the manufacturers </p>
                       </div>
                   </div>
                   <div className='flex  items-center gap-4 my-4'>
