@@ -85,8 +85,8 @@ const DisplayCartItem = ({close}) => {
                                     <p className='flex items-center gap-2'>{totalQty} item</p>
                                 </div>
                                 <div className='flex gap-4 justify-between ml-1'>
-                                    <p>Delivery Charge</p>
-                                    <p className='flex items-center gap-2'>Free</p>
+                                    <p>Delivery Charges</p>
+                                    <p className='flex items-center gap-2'>10</p>
                                 </div>
                                 <div className='font-semibold flex items-center justify-between gap-4'>
                                     <p >Grand total</p>
