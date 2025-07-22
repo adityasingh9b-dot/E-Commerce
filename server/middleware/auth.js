@@ -9,7 +9,7 @@ const auth = async (req, res, next) => {
 
     if (!token) {
       return res.status(401).json({
-        message: "Access token missing",
+        message: "You need to Register/Login first, click on the profile picture option at above right corner",
         error: true,
         success: false,
       });
