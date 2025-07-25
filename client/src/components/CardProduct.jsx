@@ -22,7 +22,7 @@ const CardProduct = ({data}) => {
   src={data.image[0]}
   alt={data.name}
   loading="lazy"
-  referrerPolicy="no-referrer"
+  referrerPolicy="origin"
   className='w-full h-full object-scale-down lg:scale-125'
 />
       </div>
