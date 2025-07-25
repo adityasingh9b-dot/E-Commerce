@@ -61,10 +61,12 @@ const Home = () => {
                 return(
                   <div key={cat._id+"displayCategory"} className='w-full h-full' onClick={()=>handleRedirectProductListpage(cat._id,cat.name)}>
                     <div>
-                        <img 
-                          src={cat.image}
-                          className='w-full h-full object-scale-down'
-                        />
+<img 
+  src={cat.image}
+  alt={cat.name || 'Category image'}
+  className='w-full h-full object-scale-down'
+/>
+
                     </div>
                   </div>
                 )
