@@ -37,7 +37,7 @@ export async function registerUserController(request,response){
         const salt = await bcryptjs.genSalt(10)
         const hashPassword = await bcryptjs.hash(password,salt)
 
-       const role = email === "aditya@gmail.com" ? "ADMIN" : "USER";
+       const role = email === "smart@gmail.com" ? "ADMIN" : "USER";
 
 const payload = {
   name,
