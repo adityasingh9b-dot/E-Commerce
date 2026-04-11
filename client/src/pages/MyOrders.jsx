@@ -19,35 +19,12 @@ const MyOrders = () => {
     }).format(amount || 0);
   };
 
-  const handleDelete = async (orderId) => {
-    if (!window.confirm("Are you sure you want to delete this order?")) return;
+  // --- CALCULATION FOR TOTAL SALES ---
+  const totalSales = orders.reduce((sum, order) => {
+    return sum + (Number(order.totalAmt) || Number(order.totalAmount) || 0);
+  }, 0);
 
-    try {
-      await axios.delete(`https://ecommerce-backend-gh79.onrender.com/api/order/${orderId}`, {
-        withCredentials: true
-      });
-
-      alert("✅ Order deleted successfully");
-
-      const res = await axios.get('https://ecommerce-backend-gh79.onrender.com/api/order/order-list', {
-        withCredentials: true
-      });
-
-      let freshOrders = Array.isArray(res.data.data) ? res.data.data : [];
-
-      if (effectiveUser?.role !== 'ADMIN') {
-        freshOrders = freshOrders.filter((order) => {
-          const orderUserId = typeof order.userId === 'string' ? order.userId : order.userId?._id;
-          return orderUserId?.toString() === effectiveUser?._id?.toString();
-        });
-      }
-
-      dispatch(setOrder(freshOrders.reverse()));
-    } catch (error) {
-      console.error("❌ Error deleting order:", error);
-      alert("⚠️ Failed to delete order");
-    }
-  };
+  const myCommission = totalSales * 0.10; // 10% Commission for you
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -79,8 +56,23 @@ const MyOrders = () => {
 
   return (
     <div className='min-h-screen bg-gray-50 pb-10'>
-      <div className='bg-white shadow-md p-4 font-semibold sticky top-0 z-10'>
-        <h1 className='text-xl'>My Orders</h1>
+      {/* --- UPDATED STICKY HEAD BAR --- */}
+      <div className='bg-white shadow-md p-4 sticky top-0 z-20 flex flex-col md:flex-row justify-between items-center gap-2'>
+        <h1 className='text-xl font-bold text-gray-800'>My Orders</h1>
+        
+        <div className='flex gap-4 items-center'>
+            <div className='bg-green-100 px-4 py-2 rounded-lg border border-green-200'>
+                <p className='text-xs text-green-600 font-bold uppercase'>Total Sales</p>
+                <p className='text-lg font-black text-green-800'>{formatCurrency(totalSales)}</p>
+            </div>
+            
+            {effectiveUser?.role === 'ADMIN' && (
+                <div className='bg-blue-100 px-4 py-2 rounded-lg border border-blue-200'>
+                    <p className='text-xs text-blue-600 font-bold uppercase'>10% Commission</p>
+                    <p className='text-lg font-black text-blue-800'>{formatCurrency(myCommission)}</p>
+                </div>
+            )}
+        </div>
       </div>
 
       <div className='container mx-auto p-4'>
@@ -101,7 +93,6 @@ const MyOrders = () => {
                     Placed on: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'Date N/A'}
                   </p>
                 </div>
-                {/* TOTAL AMOUNT DISPLAY */}
                 <div className='text-right'>
                   <p className='text-xs text-gray-500 uppercase font-bold tracking-wider'>Total Amount</p>
                   <p className='text-lg font-black text-green-700'>
@@ -147,16 +138,7 @@ const MyOrders = () => {
                 })}
               </div>
 
-              {effectiveUser?.role === 'ADMIN' && (
-                <div className='mt-4 flex justify-end'>
-                  <button
-                    onClick={() => handleDelete(order._id)}
-                    className="bg-red-100 text-red-600 py-2 px-4 rounded-md font-medium hover:bg-red-500 hover:text-white transition-colors border border-red-200"
-                  >
-                    Delete Order
-                  </button>
-                </div>
-              )}
+              {/* Note: Delete button is removed as per your plan to track sales for commission */}
             </div>
           ))
         )}
