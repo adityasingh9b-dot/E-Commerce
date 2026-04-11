@@ -52,7 +52,7 @@ const AddAddress = ({close}) => {
             </div>
             <form className='mt-4 grid gap-4' onSubmit={handleSubmit(onSubmit)}>
                 <div className='grid gap-1'>
-                    <label htmlFor='addressline'>Address Line :</label>
+                    <label htmlFor='addressline'> Hostel Name: </label>
                     <input
                         type='text'
                         id='addressline' 
@@ -61,7 +61,7 @@ const AddAddress = ({close}) => {
                     />
                 </div>
                 <div className='grid gap-1'>
-                    <label htmlFor='city'>City :</label>
+                    <label htmlFor='city'> College (e.g: IIT Ropar) : </label>
                     <input
                         type='text'
                         id='city' 
