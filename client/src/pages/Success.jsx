@@ -27,12 +27,16 @@ const Success = () => {
       <p className='text-green-800 font-bold text-lg text-center'>
         {Boolean(location?.state?.text) ? location?.state?.text : 'Payment'} Successfully
       </p>
-      <Link to='/' className='border border-green-900 text-green-900 hover:bg-green-900 hover:text-white transition-all px-4 py-1'>
-        Go To Home
+      
+      {/* --- YAHAN CHANGE KIYA HAI --- */}
+      <Link 
+        to='/dashboard/myorders' 
+        className='border border-green-900 text-green-900 hover:bg-green-900 hover:text-white transition-all px-4 py-1 font-semibold shadow-sm'
+      >
+        View My Orders
       </Link>
     </div>
   )
 }
 
 export default Success
-
