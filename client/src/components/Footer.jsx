@@ -10,7 +10,7 @@ const Footer = () => {
             <div className='flex items-center gap-2 justify-center'>
                 <p className='text-sm font-medium text-gray-500'>Need Help?</p>
                 <a 
-                    href='https://wa.me/919369250645?text=Hello%20Aditya!%20,%20I%20need%20help%20with%20my%20order.'
+                    href='https://wa.me/919369250645?text=Hello%20Aditya!%20I%20need%20help%20with%20my%20order.'
                     target="_blank"
                     rel="noopener noreferrer"
                     className='flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition-all text-sm font-semibold shadow-sm'
