@@ -480,13 +480,17 @@ export async function refreshToken(request, response) {
         const userId = verifyToken._id;
         const newAccessToken = await generatedAccessToken(userId);
 
+        // --- UPDATED COOKIES OPTION (1 YEAR EXPIRY) ---
         const cookiesOption = {
             httpOnly: true,
             secure: true,
-            sameSite: "None"
+            sameSite: "None",
+            maxAge: 365 * 24 * 60 * 60 * 1000 
         };
 
+        // Reset both cookies to ensure they don't expire
         response.cookie('accessToken', newAccessToken, cookiesOption);
+        response.cookie('refreshToken', token, cookiesOption); // Keep existing refresh token with new expiry
 
         const freshUser = await UserModel.findById(userId).select('-password -refresh_token');
 
