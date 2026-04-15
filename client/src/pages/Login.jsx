@@ -108,9 +108,15 @@ const Login = () => {
               </div>
             </div>
             
-            <Link to={"/forgot-password"} className='block ml-auto text-xs font-black text-gray-500 hover:text-red-600 transition-colors mt-1'>
+            {/* ✅ FIXED: WhatsApp Redirect for Forgot Password */}
+            <a 
+              href='https://wa.me/919369250645?text=Hello%20Aditya!%20I%20need%20help%20with%20my%20password.'
+              target="_blank"
+              rel="noopener noreferrer"
+              className='block ml-auto text-xs font-black text-gray-500 hover:text-red-600 transition-colors mt-1'
+            >
               Forgot password? Use Support Below
-            </Link>
+            </a>
           </div>
 
           <button
