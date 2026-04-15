@@ -115,7 +115,7 @@ const Login = () => {
               rel="noopener noreferrer"
               className='block ml-auto text-xs font-black text-gray-500 hover:text-red-600 transition-colors mt-1'
             >
-              Forgot password? Use Support Below
+              Forgot password?
             </a>
           </div>
 

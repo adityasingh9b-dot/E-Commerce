@@ -81,8 +81,8 @@ const Register = () => {
                         <span className='text-red-700 font-black text-xs uppercase tracking-tight'>Important Registration Policy</span>
                     </div>
                     <p className='text-gray-900 text-[11px] font-black leading-relaxed'>
-                        Register using your <span className='text-red-600 underline decoration-2'>college email id only</span>. 
-                        Other personal IDs will NOT receive orders and will be deleted from the database!
+                        Register using your <span className='text-red-600 underline decoration-2'>COLLEGE EMAIL ID ONLY!</span>. 
+                        
                     </p>
                 </div>
 
