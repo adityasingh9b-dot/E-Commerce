@@ -3,7 +3,7 @@
   "appName": "AdiMart",
   "webDir": "dist",
   "server": {
-    "url": "https://ecommerce-frontend-1g77.onrender.com",
+    "url": "https://ecommerce-frontend-gh79.onrender.com",
     "cleartext": true
   }
 }
