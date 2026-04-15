@@ -1,12 +1,6 @@
 apply plugin: 'com.android.application'
 
 android {
-
-compileOptions {
-    sourceCompatibility JavaVersion.VERSION_17
-    targetCompatibility JavaVersion.VERSION_17
-}
-
     namespace "com.example.s_mart_grocery_store"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
@@ -47,6 +41,8 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
 }
+
+apply from: 'capacitor.build.gradle'
 
 try {
     def servicesJSON = file('google-services.json')
