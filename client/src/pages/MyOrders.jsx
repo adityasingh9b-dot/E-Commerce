@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import NoData from '../components/NoData';
 import axios from 'axios';
 import { setOrder } from "../store/orderSlice";
-import { IoNotificationsOutline, IoNotificationsOffOutline } from "react-icons/io5";
+import { IoNotificationsOutline, IoNotificationsOffOutline, IoPlayCircleOutline } from "react-icons/io5";
 
 const MyOrders = () => {
   const dispatch = useDispatch();
@@ -12,9 +12,20 @@ const MyOrders = () => {
   const localUser = JSON.parse(localStorage.getItem("user"));
   const effectiveUser = reduxUser || localUser?.data || {};
 
-  // 1. Mute State & Audio Reference
+  // 1. STATES (Added completedOrders for persistence and isAudioEnabled for browser policy)
   const [isMuted, setIsMuted] = useState(false);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false); 
+  const [completedOrders, setCompletedOrders] = useState(() => {
+    const saved = localStorage.getItem("completed_orders");
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const audioRef = useRef(new Audio('/siren.mp3')); 
+
+  // 2. PERSISTENCE EFFECT
+  useEffect(() => {
+    localStorage.setItem("completed_orders", JSON.stringify(completedOrders));
+  }, [completedOrders]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -37,20 +48,14 @@ const MyOrders = () => {
 
   const myCommission = totalNetFoodSales * 0.10;
 
- const playSiren = () => {
-  console.log("Attempting to play sound..."); // Debugging
-  if (!isMuted && effectiveUser?.role === 'ADMIN') {
-    audioRef.current.muted = false; // Force un-mute
-    audioRef.current.currentTime = 0;
-    const playPromise = audioRef.current.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.catch(err => {
-        console.error("Autoplay blocked by browser. Click on the page first!", err);
-      });
+  const playSiren = () => {
+    // Only play if not muted, user is Admin, and browser audio is enabled by interaction
+    if (!isMuted && effectiveUser?.role === 'ADMIN' && isAudioEnabled) {
+      audioRef.current.muted = false;
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(err => console.error("Siren blocked:", err));
     }
-  }
-};
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -72,10 +77,9 @@ const MyOrders = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        // 3. SOUND TRIGGER LOGIC: Compare new list with current redux state
+        // SOUND TRIGGER LOGIC
         if (orders.length > 0 && sortedOrders.length > 0) {
           if (sortedOrders[0]._id !== orders[0]._id) {
-            console.log("🚨 New Order Detected!");
             playSiren();
           }
         }
@@ -89,16 +93,30 @@ const MyOrders = () => {
     fetchOrders();
     const intervalId = setInterval(fetchOrders, 5000);
     return () => clearInterval(intervalId);
-  }, [effectiveUser, dispatch, orders, isMuted]); // Added dependencies for sound logic
+  }, [effectiveUser, dispatch, orders, isMuted, isAudioEnabled]);
 
   return (
-    <div className='min-h-screen bg-gray-50 pb-10'>
+    <div className='min-h-screen bg-gray-50 pb-10 relative'>
+      
+      {/* 3. BROWSER AUTOPLAY UNLOCKER (Required for Siren to work) */}
+      {!isAudioEnabled && effectiveUser?.role === 'ADMIN' && (
+        <div className="fixed inset-0 z-[100] bg-black/60 flex flex-col items-center justify-center text-white p-4 backdrop-blur-sm">
+           <IoPlayCircleOutline size={70} className="mb-4 text-green-400" />
+           <h2 className="text-xl font-bold mb-4">Enable Order Alerts?</h2>
+           <button 
+             onClick={() => setIsAudioEnabled(true)}
+             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-transform active:scale-95"
+           >
+             Activate Siren
+           </button>
+        </div>
+      )}
+
       {/* --- STICKY HEAD BAR --- */}
       <div className='bg-white shadow-md p-4 sticky top-0 z-20 flex flex-col md:flex-row justify-between items-center gap-4'>
         <div className="flex items-center gap-4">
           <h1 className='text-xl font-bold text-gray-800'>Admin Orders</h1>
           
-          {/* 4. NOTIFICATION TOGGLE BUTTON */}
           {effectiveUser?.role === 'ADMIN' && (
             <button 
               onClick={() => setIsMuted(!isMuted)}
@@ -137,15 +155,21 @@ const MyOrders = () => {
           orders.map((order, index) => (
             <div
               key={order._id || index}
-              className={`order rounded-lg p-5 text-sm border bg-white mb-6 shadow-sm hover:shadow-md transition-shadow ${effectiveUser?.role === 'ADMIN' ? 'border-l-8 border-l-primary-500' : ''}`}
+              className={`order rounded-lg p-5 text-sm border bg-white mb-6 shadow-sm transition-all ${completedOrders[order._id] ? 'opacity-50 grayscale' : 'opacity-100'} ${effectiveUser?.role === 'ADMIN' ? 'border-l-8 border-l-primary-500' : ''}`}
             >
               <div className='flex justify-between items-start border-b pb-3 mb-3'>
                 <div className="flex gap-4 items-start">
                   {effectiveUser?.role === 'ADMIN' && (
                     <input 
                       type="checkbox" 
-                      className="mt-1.5 h-5 w-5 cursor-pointer accent-primary-600" 
-                      onClick={(e) => e.stopPropagation()} 
+                      checked={!!completedOrders[order._id]}
+                      onChange={() => {
+                        setCompletedOrders(prev => ({
+                          ...prev,
+                          [order._id]: !prev[order._id]
+                        }));
+                      }}
+                      className="mt-1.5 h-6 w-6 cursor-pointer accent-green-600" 
                     />
                   )}
                   
