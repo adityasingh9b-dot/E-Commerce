@@ -12,7 +12,7 @@ const MyOrders = () => {
   const localUser = JSON.parse(localStorage.getItem("user"));
   const effectiveUser = reduxUser || localUser?.data || {};
 
-  // 1. STATES (Added completedOrders for persistence and isAudioEnabled for browser policy)
+  // 1. STATES
   const [isMuted, setIsMuted] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false); 
   const [completedOrders, setCompletedOrders] = useState(() => {
@@ -34,19 +34,13 @@ const MyOrders = () => {
     }).format(amount || 0);
   };
 
-  const deliveryChargePerOrder = 50;
-
+  // 3. UPDATED CALCULATION: Only Gross and Commission
   const totalGrossSales = orders.reduce((sum, order) => {
     return sum + (Number(order.totalAmt) || Number(order.totalAmount) || 0);
   }, 0);
 
-  const totalNetFoodSales = orders.reduce((sum, order) => {
-    const amt = Number(order.totalAmt) || Number(order.totalAmount) || 0;
-    const foodOnly = amt > deliveryChargePerOrder ? amt - deliveryChargePerOrder : 0;
-    return sum + foodOnly;
-  }, 0);
-
-  const myCommission = totalNetFoodSales * 0.10;
+  // Commission is now directly 10% of Total Gross Sales
+  const myCommission = totalGrossSales * 0.10;
 
   const playSiren = () => {
     // Only play if not muted, user is Admin, and browser audio is enabled by interaction
@@ -98,7 +92,7 @@ const MyOrders = () => {
   return (
     <div className='min-h-screen bg-gray-50 pb-10 relative'>
       
-      {/* 3. BROWSER AUTOPLAY UNLOCKER (Required for Siren to work) */}
+      {/* 3. BROWSER AUTOPLAY UNLOCKER */}
       {!isAudioEnabled && effectiveUser?.role === 'ADMIN' && (
         <div className="fixed inset-0 z-[100] bg-black/60 flex flex-col items-center justify-center text-white p-4 backdrop-blur-sm">
            <IoPlayCircleOutline size={70} className="mb-4 text-green-400" />
@@ -129,15 +123,10 @@ const MyOrders = () => {
         </div>
         
         {effectiveUser?.role === 'ADMIN' && (
-          <div className='flex flex-wrap gap-3 items-center justify-center'>
-              <div className='bg-gray-100 px-3 py-1 rounded border border-gray-300 text-center'>
-                  <p className='text-xs text-gray-800 font-bold uppercase'>Gross (Inc. Delivery)</p>
-                  <p className='text-base font-black text-gray-900'>{formatCurrency(totalGrossSales)}</p>
-              </div>
-
-              <div className='bg-green-100 px-4 py-2 rounded-lg border border-green-300 text-center shadow-sm'>
-                  <p className='text-sm text-green-800 font-bold uppercase'>Net Food Sales</p>
-                  <p className='text-xl font-black text-green-900'>{formatCurrency(totalNetFoodSales)}</p>
+          <div className='flex flex-wrap gap-4 items-center justify-center'>
+              <div className='bg-gray-100 px-4 py-2 rounded-lg border border-gray-300 text-center shadow-sm'>
+                  <p className='text-sm text-gray-800 font-bold uppercase'>Total Gross Sales</p>
+                  <p className='text-xl font-black text-gray-900'>{formatCurrency(totalGrossSales)}</p>
               </div>
               
               <div className='bg-blue-100 px-4 py-2 rounded-lg border border-blue-300 text-center shadow-sm'>
