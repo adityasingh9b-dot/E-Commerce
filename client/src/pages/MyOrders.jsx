@@ -21,6 +21,9 @@ const MyOrders = () => {
   });
 
   const audioRef = useRef(new Audio('/siren.mp3')); 
+  
+  // NEW: Ref to keep track of the latest order ID without triggering re-renders
+  const latestOrderIdRef = useRef(null);
 
   // 2. PERSISTENCE EFFECT
   useEffect(() => {
@@ -34,16 +37,14 @@ const MyOrders = () => {
     }).format(amount || 0);
   };
 
-  // 3. UPDATED CALCULATION: Only Gross and Commission
+  // 3. UPDATED CALCULATION
   const totalGrossSales = orders.reduce((sum, order) => {
     return sum + (Number(order.totalAmt) || Number(order.totalAmount) || 0);
   }, 0);
 
-  // Commission is now directly 10% of Total Gross Sales
   const myCommission = totalGrossSales * 0.10;
 
   const playSiren = () => {
-    // Only play if not muted, user is Admin, and browser audio is enabled by interaction
     if (!isMuted && effectiveUser?.role === 'ADMIN' && isAudioEnabled) {
       audioRef.current.muted = false;
       audioRef.current.currentTime = 0;
@@ -71,11 +72,17 @@ const MyOrders = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        // SOUND TRIGGER LOGIC
-        if (orders.length > 0 && sortedOrders.length > 0) {
-          if (sortedOrders[0]._id !== orders[0]._id) {
+        // FIXED SOUND TRIGGER LOGIC using useRef
+        if (sortedOrders.length > 0) {
+          const newestFetchedId = sortedOrders[0]._id;
+          
+          // Agar humare paas purana ID saved hai aur vo naye ID se alag hai = NAYA ORDER AAYA!
+          if (latestOrderIdRef.current && latestOrderIdRef.current !== newestFetchedId) {
             playSiren();
           }
+          
+          // Hamesha latest ID ko ref me update kardo agle comparison ke liye
+          latestOrderIdRef.current = newestFetchedId;
         }
 
         dispatch(setOrder(sortedOrders));
@@ -87,7 +94,10 @@ const MyOrders = () => {
     fetchOrders();
     const intervalId = setInterval(fetchOrders, 5000);
     return () => clearInterval(intervalId);
-  }, [effectiveUser, dispatch, orders, isMuted, isAudioEnabled]);
+    
+    // Yaha se `orders` aur pure `effectiveUser` object ko hata diya taaki infinite loops na bane.
+    // Sirf role, _id aur mute states rakhe hain taaki unnecessary refreshes na hon.
+  }, [effectiveUser?.role, effectiveUser?._id, dispatch, isMuted, isAudioEnabled]);
 
   return (
     <div className='min-h-screen bg-gray-50 pb-10 relative'>
@@ -176,7 +186,7 @@ const MyOrders = () => {
                 </div>
                 
                 <div className='text-right'>
-                  <p className='text-sm text-gray-800 uppercase font-bold tracking-wider'>Order Total:</p>
+                  <p className='text-sm text-gray-800 uppercase font-bold tracking-wider'>Total Paid</p>
                   <p className='text-xl font-black text-green-700'>
                     {formatCurrency(order.totalAmt || order.totalAmount)}
                   </p>
