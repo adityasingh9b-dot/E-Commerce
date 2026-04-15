@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import NoData from '../components/NoData';
 import axios from 'axios';
 import { setOrder } from "../store/orderSlice";
+import { IoNotificationsOutline, IoNotificationsOffOutline } from "react-icons/io5";
 
 const MyOrders = () => {
   const dispatch = useDispatch();
@@ -10,6 +11,10 @@ const MyOrders = () => {
   const reduxUser = useSelector((state) => state.user?.user);
   const localUser = JSON.parse(localStorage.getItem("user"));
   const effectiveUser = reduxUser || localUser?.data || {};
+
+  // 1. Mute State & Audio Reference
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef(new Audio('/siren.mp3')); 
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -32,6 +37,14 @@ const MyOrders = () => {
 
   const myCommission = totalNetFoodSales * 0.10;
 
+  // 2. Play Siren Function
+  const playSiren = () => {
+    if (!isMuted && effectiveUser?.role === 'ADMIN') {
+      audioRef.current.currentTime = 0; // Reset to start
+      audioRef.current.play().catch(err => console.log("Audio play blocked: Interaction needed first."));
+    }
+  };
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -48,10 +61,17 @@ const MyOrders = () => {
           });
         }
 
-        // 1. LATEST ORDER TOP PE (Sorting by date)
         const sortedOrders = [...fetchedOrders].sort((a, b) => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
+
+        // 3. SOUND TRIGGER LOGIC: Compare new list with current redux state
+        if (orders.length > 0 && sortedOrders.length > 0) {
+          if (sortedOrders[0]._id !== orders[0]._id) {
+            console.log("🚨 New Order Detected!");
+            playSiren();
+          }
+        }
 
         dispatch(setOrder(sortedOrders));
       } catch (err) {
@@ -62,12 +82,26 @@ const MyOrders = () => {
     fetchOrders();
     const intervalId = setInterval(fetchOrders, 5000);
     return () => clearInterval(intervalId);
-  }, [effectiveUser, dispatch]);
+  }, [effectiveUser, dispatch, orders, isMuted]); // Added dependencies for sound logic
 
   return (
     <div className='min-h-screen bg-gray-50 pb-10'>
+      {/* --- STICKY HEAD BAR --- */}
       <div className='bg-white shadow-md p-4 sticky top-0 z-20 flex flex-col md:flex-row justify-between items-center gap-4'>
-        <h1 className='text-xl font-bold text-gray-800'>My Orders</h1>
+        <div className="flex items-center gap-4">
+          <h1 className='text-xl font-bold text-gray-800'>Admin Orders</h1>
+          
+          {/* 4. NOTIFICATION TOGGLE BUTTON */}
+          {effectiveUser?.role === 'ADMIN' && (
+            <button 
+              onClick={() => setIsMuted(!isMuted)}
+              className={`p-2 rounded-full transition-all flex items-center gap-2 ${isMuted ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600 animate-pulse'}`}
+            >
+              {isMuted ? <IoNotificationsOffOutline size={22} /> : <IoNotificationsOutline size={22} />}
+              <span className="text-xs font-bold">{isMuted ? "Muted" : "Active"}</span>
+            </button>
+          )}
+        </div>
         
         {effectiveUser?.role === 'ADMIN' && (
           <div className='flex flex-wrap gap-3 items-center justify-center'>
@@ -100,7 +134,6 @@ const MyOrders = () => {
             >
               <div className='flex justify-between items-start border-b pb-3 mb-3'>
                 <div className="flex gap-4 items-start">
-                  {/* 2. ADMIN TICK BOX (For reference only) */}
                   {effectiveUser?.role === 'ADMIN' && (
                     <input 
                       type="checkbox" 
@@ -113,7 +146,6 @@ const MyOrders = () => {
                     <p className='font-bold text-gray-800 text-base'>
                       Order No: <span className="text-primary-600">#{order.orderId || "N/A"}</span>
                     </p>
-                    {/* 3. DATE + TIME DISPLAY */}
                     <p className='text-xs font-medium text-gray-500'>
                       📅 {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'} 
                       <span className="ml-2 bg-gray-200 px-1.5 py-0.5 rounded text-gray-700">
