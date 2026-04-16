@@ -44,11 +44,12 @@ const DisplayCartItem = ({close}) => {
                 </button>
             </div>
 
-            <div className='flex-1 h-full bg-gray-50 p-2 flex flex-col gap-4 overflow-y-auto pb-32'> {/* Added extra padding-bottom so items don't hide behind floating button */}
+            {/* Content Area - Added more padding bottom to clear the higher floating button */}
+            <div className='flex-1 h-full bg-gray-50 p-2 flex flex-col gap-4 overflow-y-auto pb-40'> 
                 {cartItem[0] ? (
                     <>
                         {/* Savings Alert */}
-                        <div className='flex items-center justify-between px-4 py-3 bg-green-100 text-green-700 rounded-xl shrink-0 border border-green-200 animate-pulse'>
+                        <div className='flex items-center justify-between px-4 py-3 bg-green-100 text-green-700 rounded-xl shrink-0 border border-green-200'>
                             <p className='text-xs font-bold uppercase'>Total Savings</p>
                             <p className='font-black'>{DisplayPriceInRupees(notDiscountTotalPrice - totalPrice )}</p>
                         </div>
@@ -80,7 +81,7 @@ const DisplayCartItem = ({close}) => {
 
                         {/* Bill Details */}
                         <div className='bg-white p-5 rounded-2xl border border-gray-100 mb-4 shadow-sm'>
-                            <h3 className='font-black uppercase text-xs tracking-widest text-gray-400 mb-3'>Bill Summary</h3>
+                            <h3 className='font-black uppercase text-xs tracking-widest text-gray-400 mb-3 text-center'>Bill Summary</h3>
                             <div className='flex gap-4 justify-between text-sm mb-2'>
                                 <p className='font-bold text-gray-600'>Items total</p>
                                 <p className='flex items-center gap-2'>
@@ -102,24 +103,24 @@ const DisplayCartItem = ({close}) => {
                     <div className='bg-white flex flex-col justify-center items-center p-10 h-full rounded-2xl'>
                         <img src={imageEmpty} className='w-48 h-48 object-scale-down opacity-50' alt="Empty Cart" />
                         <p className='font-black text-gray-400 mt-4 uppercase tracking-widest'>Cart is empty</p>
-                        <Link onClick={close} to={"/"} className='bg-black text-white px-8 py-3 rounded-xl font-black mt-6 shadow-lg active:scale-95 transition-all uppercase text-sm'>Start Shopping</Link>
+                        <Link onClick={close} to={"/"} className='bg-black text-white px-8 py-3 rounded-xl font-black mt-6 shadow-lg uppercase text-sm'>Start Shopping</Link>
                     </div>
                 )}
             </div>
 
-            {/* ✅ FLOATING PROCEED BUTTON SECTION */}
+            {/* ✅ UPDATED HIGHER FLOATING PROCEED BUTTON */}
             {cartItem[0] && (
-                <div className='absolute bottom-6 left-0 right-0 px-4 z-[110]'>
+                <div className='absolute bottom-10 left-0 right-0 px-4 z-[110]'>
                     <button 
                         onClick={redirectToCheckoutPage}
-                        className='w-full bg-green-700 hover:bg-black text-white px-5 py-4 rounded-[20px] font-black flex items-center justify-between transition-all shadow-[0_10px_30px_rgba(21,128,61,0.4)] active:scale-[0.96] border border-white/20'
+                        className='w-full bg-green-700 hover:bg-green-800 text-white px-5 py-5 rounded-[24px] font-black flex items-center justify-between transition-all shadow-[0_15px_40px_rgba(21,128,61,0.5)] active:scale-[0.95] border-2 border-white/10'
                     >
                         <div className='flex flex-col items-start'>
-                            <span className='text-[10px] uppercase opacity-70 leading-none mb-1 tracking-wider'>Grand Total</span>
-                            <span className='text-lg leading-none'>{DisplayPriceInRupees(totalPrice + deliveryCharge)}</span>
+                            <span className='text-[10px] uppercase opacity-80 leading-none mb-1 tracking-widest'>To Pay</span>
+                            <span className='text-xl leading-none font-black'>{DisplayPriceInRupees(totalPrice + deliveryCharge)}</span>
                         </div>
-                        <div className='flex items-center gap-2 bg-white/20 px-5 py-2 rounded-xl backdrop-blur-md'>
-                            <span className='uppercase tracking-tighter text-sm'>Proceed</span>
+                        <div className='flex items-center gap-2 bg-white text-green-800 px-5 py-2.5 rounded-2xl shadow-inner'>
+                            <span className='uppercase tracking-tighter text-sm font-black'>Proceed</span>
                             <FaCaretRight className='text-xl' />
                         </div>
                     </button>

@@ -119,7 +119,7 @@ const MyOrders = () => {
       {/* --- STICKY HEAD BAR --- */}
       <div className='bg-white shadow-md p-4 sticky top-0 z-20 flex flex-col md:flex-row justify-between items-center gap-4'>
         <div className="flex items-center gap-4">
-          <h1 className='text-xl font-black text-gray-900'>Admin Orders</h1>
+          <h1 className='text-xl font-black text-gray-900'>My Orders</h1>
           
           {effectiveUser?.role === 'ADMIN' && (
             <button 
