@@ -14,27 +14,22 @@ const CartMobileLink = () => {
     <>
         {
             cartItem[0] && (
-            /* Fixed position ensures it floats OVER the footer */
-            <div className='fixed bottom-0 left-0 right-0 p-3 z-[100] lg:hidden'>
-                <div className='bg-green-700 px-4 py-3 rounded-xl text-white shadow-[0_-5px_20px_rgba(0,0,0,0.2)] flex items-center justify-between gap-3 border-t border-green-500 animate-bounce-subtle'>
-                    
-                    {/* Left Side: Items & Price */}
+            /* Added z-50 and kept sticky to maintain your original logic */
+            <div className='sticky bottom-4 p-2 z-50'>
+                <div className='bg-green-700 px-3 py-2 rounded-xl text-white shadow-2xl flex items-center justify-between gap-3 lg:hidden border border-green-500'>
                     <div className='flex items-center gap-3'>
-                        <div className='p-2 bg-green-600 rounded-lg shadow-inner'>
-                            <FaCartShopping className='text-xl text-white'/>
+                        <div className='p-2 bg-green-600 rounded-lg'>
+                            <FaCartShopping className='text-lg'/>
                         </div>
                         <div className='flex flex-col'>
-                            <p className='text-[10px] font-black uppercase tracking-widest opacity-90'>Your Cart</p>
-                            <p className='text-sm font-black leading-none'>
-                                {totalQty} items • {DisplayPriceInRupees(totalPrice)}
-                            </p>
+                            <p className='text-[10px] font-black uppercase opacity-80 leading-none'>Items</p>
+                            <p className='text-sm font-black'>{totalQty} | {DisplayPriceInRupees(totalPrice)}</p>
                         </div>
                     </div>
 
-                    {/* Right Side: View Cart Link */}
-                    <Link to={"/cart"} className='flex items-center gap-1 bg-white text-green-800 px-4 py-2 rounded-lg font-black text-xs uppercase shadow-md active:scale-95 transition-all'>
+                    <Link to={"/cart"} className='flex items-center gap-1 bg-white text-green-800 px-3 py-1.5 rounded-lg font-black text-xs uppercase shadow-sm'>
                         <span>View Cart</span>
-                        <FaCaretRight className='text-lg'/>
+                        <FaCaretRight/>
                     </Link>
                 </div>
             </div>
