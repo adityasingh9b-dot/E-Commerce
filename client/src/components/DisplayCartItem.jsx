@@ -31,10 +31,10 @@ const DisplayCartItem = ({close}) => {
 
   return (
     <section className='bg-neutral-900 fixed top-0 bottom-0 right-0 left-0 bg-opacity-70 z-[100]'>
-        <div className='bg-white w-full max-w-sm min-h-screen max-h-screen ml-auto overflow-hidden flex flex-col shadow-2xl'>
+        <div className='bg-white w-full max-w-sm min-h-screen max-h-screen ml-auto overflow-hidden flex flex-col shadow-2xl relative'>
             
             {/* Header */}
-            <div className='flex items-center p-4 shadow-sm gap-3 justify-between bg-white border-b'>
+            <div className='flex items-center p-4 shadow-sm gap-3 justify-between bg-white border-b shrink-0'>
                 <h2 className='font-black uppercase tracking-tighter text-xl'>My Cart ({totalQty})</h2>
                 <Link to={"/"} className='lg:hidden text-black'>
                     <IoClose size={28}/>
@@ -44,7 +44,7 @@ const DisplayCartItem = ({close}) => {
                 </button>
             </div>
 
-            <div className='flex-1 h-full bg-gray-50 p-2 flex flex-col gap-4 overflow-y-auto'>
+            <div className='flex-1 h-full bg-gray-50 p-2 flex flex-col gap-4 overflow-y-auto pb-32'> {/* Added extra padding-bottom so items don't hide behind floating button */}
                 {cartItem[0] ? (
                     <>
                         {/* Savings Alert */}
@@ -107,18 +107,18 @@ const DisplayCartItem = ({close}) => {
                 )}
             </div>
 
-            {/* ✅ PROCEED BUTTON SECTION (Floating at Bottom) */}
+            {/* ✅ FLOATING PROCEED BUTTON SECTION */}
             {cartItem[0] && (
-                <div className='p-4 bg-white border-t border-gray-100 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]'>
+                <div className='absolute bottom-6 left-0 right-0 px-4 z-[110]'>
                     <button 
                         onClick={redirectToCheckoutPage}
-                        className='w-full bg-green-700 hover:bg-black text-white px-5 py-4 rounded-2xl font-black flex items-center justify-between transition-all shadow-xl active:scale-[0.98]'
+                        className='w-full bg-green-700 hover:bg-black text-white px-5 py-4 rounded-[20px] font-black flex items-center justify-between transition-all shadow-[0_10px_30px_rgba(21,128,61,0.4)] active:scale-[0.96] border border-white/20'
                     >
                         <div className='flex flex-col items-start'>
-                            <span className='text-[10px] uppercase opacity-70 leading-none mb-1'>Total to Pay</span>
+                            <span className='text-[10px] uppercase opacity-70 leading-none mb-1 tracking-wider'>Grand Total</span>
                             <span className='text-lg leading-none'>{DisplayPriceInRupees(totalPrice + deliveryCharge)}</span>
                         </div>
-                        <div className='flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm'>
+                        <div className='flex items-center gap-2 bg-white/20 px-5 py-2 rounded-xl backdrop-blur-md'>
                             <span className='uppercase tracking-tighter text-sm'>Proceed</span>
                             <FaCaretRight className='text-xl' />
                         </div>
