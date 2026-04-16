@@ -110,7 +110,7 @@ const DisplayCartItem = ({close}) => {
 
             {/* ✅ UPDATED HIGHER FLOATING PROCEED BUTTON */}
             {cartItem[0] && (
-                <div className='absolute bottom-10 left-0 right-0 px-4 z-[110]'>
+                <div className='absolute bottom-14 left-0 right-0 px-4 z-[110]'>
                     <button 
                         onClick={redirectToCheckoutPage}
                         className='w-full bg-green-700 hover:bg-green-800 text-white px-5 py-5 rounded-[24px] font-black flex items-center justify-between transition-all shadow-[0_15px_40px_rgba(21,128,61,0.5)] active:scale-[0.95] border-2 border-white/10'
