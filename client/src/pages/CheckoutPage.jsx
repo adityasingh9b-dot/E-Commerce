@@ -18,7 +18,6 @@ const CheckoutPage = () => {
   const cartItemsList = useSelector(state => state.cartItem.cart)
   const navigate = useNavigate()
 
-  // --- DELIVERY CHARGE CONSTANT ---
   const deliveryCharge = 50 
 
   const handleCashOnDelivery = async() => {
@@ -29,7 +28,7 @@ const CheckoutPage = () => {
               list_items : cartItemsList,
               addressId : addressList[selectAddress]?._id,
               subTotalAmt : totalPrice,
-              totalAmt :  totalPrice + deliveryCharge, // Added Delivery Charge
+              totalAmt :  totalPrice + deliveryCharge, 
             }
           })
 
@@ -67,7 +66,7 @@ const CheckoutPage = () => {
               list_items : cartItemsList,
               addressId : addressList[selectAddress]?._id,
               subTotalAmt : totalPrice,
-              totalAmt :  totalPrice + deliveryCharge, // Added Delivery Charge
+              totalAmt :  totalPrice + deliveryCharge, 
             }
         })
 
@@ -90,7 +89,7 @@ const CheckoutPage = () => {
     <section className='bg-blue-50'>
       <div className='container mx-auto p-4 flex flex-col lg:flex-row w-full gap-5 justify-between'>
         <div className='w-full'>
-          <h3 className='text-lg font-semibold'>Choose your address</h3>
+          <h3 className='text-lg font-bold'>Choose your address</h3>
           <div className='bg-white p-2 grid gap-4'>
             {
               addressList.map((address, index) => {
@@ -100,55 +99,56 @@ const CheckoutPage = () => {
                       <div>
                         <input id={"address" + index} type='radio' value={index} onChange={(e) => setSelectAddress(e.target.value)} name='address' checked={selectAddress == index} />
                       </div>
-                      <div>
+                      {/* ✅ Address details made bold */}
+                      <div className='font-bold text-neutral-800'>
                         <p>{address.address_line}</p>
                         <p>{address.city}, {address.state}</p>
                         <p>{address.country} - {address.pincode}</p>
-                        <p>{address.mobile}</p>
+                        <p className='mt-1 text-blue-700'>Ph: {address.mobile}</p>
                       </div>
                     </div>
                   </label>
                 )
               })
             }
-            <div onClick={() => setOpenAddress(true)} className='h-16 bg-blue-50 border-2 border-dashed flex justify-center items-center cursor-pointer'>
-              Add address
+            <div onClick={() => setOpenAddress(true)} className='h-16 bg-blue-50 border-2 border-dashed flex justify-center items-center cursor-pointer font-bold text-blue-600'>
+              + Add address
             </div>
           </div>
         </div>
 
-        <div className='w-full max-w-md bg-white py-4 px-2'>
-          <h3 className='text-lg font-semibold'>Summary</h3>
+        <div className='w-full max-w-md bg-white py-4 px-2 shadow-sm rounded'>
+          <h3 className='text-lg font-bold px-4'>Summary</h3>
           <div className='bg-white p-4'>
-            <h3 className='font-semibold'>Bill details</h3>
-            <div className='flex gap-4 justify-between ml-1'>
+            <h3 className='font-bold text-neutral-600 mb-2'>Bill details</h3>
+            
+            <div className='flex gap-4 justify-between ml-1 font-semibold'>
               <p>Items total</p>
               <p className='flex items-center gap-2'>
-                <span className='line-through text-neutral-400'>{DisplayPriceInRupees(notDiscountTotalPrice)}</span>
-                <span>{DisplayPriceInRupees(totalPrice)}</span>
+                <span className='line-through text-neutral-400 font-medium'>{DisplayPriceInRupees(notDiscountTotalPrice)}</span>
+                <span className='text-neutral-900'>{DisplayPriceInRupees(totalPrice)}</span>
               </p>
             </div>
-            <div className='flex gap-4 justify-between ml-1'>
+
+            <div className='flex gap-4 justify-between ml-1 font-semibold'>
               <p>Total Quantity:</p>
-              <p className='flex items-center gap-2'>{totalQty} item</p>
+              <p className='text-neutral-900'>{totalQty} item</p>
             </div>
             
-            {/* --- UPDATED DELIVERY CHARGE UI --- */}
-            <div className='flex gap-4 justify-between ml-1'>
+            <div className='flex gap-4 justify-between ml-1 font-semibold'>
               <p>Delivery Charge</p>
-              <p className='text-green-600 font-medium'>{DisplayPriceInRupees(deliveryCharge)}</p>
+              <p className='text-green-700 font-bold'>{DisplayPriceInRupees(deliveryCharge)}</p>
             </div>
 
-            {/* --- UPDATED GRAND TOTAL UI --- */}
-            <div className='font-semibold flex items-center justify-between gap-4 border-t pt-2 mt-2 text-lg'>
+            <div className='font-bold flex items-center justify-between gap-4 border-t-2 pt-2 mt-2 text-xl text-neutral-900'>
               <p>Grand total</p>
               <p>{DisplayPriceInRupees(totalPrice + deliveryCharge)}</p>
             </div>
           </div>
           
-          <div className='w-full flex flex-col gap-4 mt-4'>
-            <button className='py-2 px-4 bg-green-600 hover:bg-green-700 rounded text-white font-semibold' onClick={handleOnlinePayment}>Online Payment</button>
-            <button className='py-2 px-4 border-2 border-green-600 font-semibold text-green-600 hover:bg-green-600 hover:text-white' onClick={handleCashOnDelivery}>Cash on Delivery</button>
+          <div className='w-full flex flex-col gap-4 mt-4 px-4'>
+            
+            <button className='py-3 px-4 border-2 border-green-600 font-bold text-green-600 hover:bg-green-600 hover:text-white rounded uppercase tracking-wider' onClick={handleCashOnDelivery}>Cash on Delivery</button>
           </div>
         </div>
       </div>
