@@ -148,7 +148,7 @@ const CheckoutPage = () => {
           
           <div className='w-full flex flex-col gap-4 mt-4 px-4'>
             
-            <button className='py-3 px-4 border-2 border-green-600 font-bold text-green-600 hover:bg-green-600 hover:text-white rounded uppercase tracking-wider' onClick={handleCashOnDelivery}>Cash on Delivery</button>
+            <button className='py-3 px-4 border-2 border-green-600 font-bold text-green-600 hover:bg-green-600 hover:text-white rounded uppercase tracking-wider' onClick={handleCashOnDelivery}> Place Order (Cash on Delivery) </button>
           </div>
         </div>
       </div>
