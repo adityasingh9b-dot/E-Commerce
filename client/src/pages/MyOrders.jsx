@@ -12,6 +12,9 @@ const MyOrders = () => {
   const localUser = JSON.parse(localStorage.getItem("user"));
   const effectiveUser = reduxUser || localUser?.data || {};
 
+  // --- POWER CHECK: Admin aur Co-Admin dono ko access dega ---
+  const hasManagerPower = effectiveUser?.role === 'ADMIN' || effectiveUser?.role === 'COADMIN';
+
   // 1. STATES
   const [isMuted, setIsMuted] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false); 
@@ -22,7 +25,7 @@ const MyOrders = () => {
 
   const audioRef = useRef(new Audio('/siren.mp3')); 
   
-  // NEW: Ref to keep track of the latest order ID without triggering re-renders
+  // Ref to keep track of the latest order ID without triggering re-renders
   const latestOrderIdRef = useRef(null);
 
   // 2. PERSISTENCE EFFECT
@@ -45,7 +48,8 @@ const MyOrders = () => {
   const myCommission = totalGrossSales * 0.10;
 
   const playSiren = () => {
-    if (!isMuted && effectiveUser?.role === 'ADMIN' && isAudioEnabled) {
+    // FIXED: Siren ab Co-Admin ke liye bhi bajegi
+    if (!isMuted && hasManagerPower && isAudioEnabled) {
       audioRef.current.muted = false;
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(err => console.error("Siren blocked:", err));
@@ -61,7 +65,8 @@ const MyOrders = () => {
 
         let fetchedOrders = Array.isArray(res.data.data) ? res.data.data : [];
 
-        if (effectiveUser?.role !== 'ADMIN') {
+        // FIXED: Filter sirf tab hoga jab banda na Admin ho na Co-Admin
+        if (!hasManagerPower) {
           fetchedOrders = fetchedOrders.filter((order) => {
             const orderUserId = typeof order.userId === 'string' ? order.userId : order.userId?._id;
             return orderUserId?.toString() === effectiveUser?._id?.toString();
@@ -72,16 +77,14 @@ const MyOrders = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        // FIXED SOUND TRIGGER LOGIC using useRef
+        // SOUND TRIGGER LOGIC
         if (sortedOrders.length > 0) {
           const newestFetchedId = sortedOrders[0]._id;
           
-          // Agar humare paas purana ID saved hai aur vo naye ID se alag hai = NAYA ORDER AAYA!
           if (latestOrderIdRef.current && latestOrderIdRef.current !== newestFetchedId) {
             playSiren();
           }
           
-          // Hamesha latest ID ko ref me update kardo agle comparison ke liye
           latestOrderIdRef.current = newestFetchedId;
         }
 
@@ -95,15 +98,13 @@ const MyOrders = () => {
     const intervalId = setInterval(fetchOrders, 5000);
     return () => clearInterval(intervalId);
     
-    // Yaha se `orders` aur pure `effectiveUser` object ko hata diya taaki infinite loops na bane.
-    // Sirf role, _id aur mute states rakhe hain taaki unnecessary refreshes na hon.
-  }, [effectiveUser?.role, effectiveUser?._id, dispatch, isMuted, isAudioEnabled]);
+  }, [effectiveUser?.role, effectiveUser?._id, dispatch, isMuted, isAudioEnabled, hasManagerPower]);
 
   return (
     <div className='min-h-screen bg-gray-50 pb-10 relative'>
       
-      {/* 3. BROWSER AUTOPLAY UNLOCKER */}
-      {!isAudioEnabled && effectiveUser?.role === 'ADMIN' && (
+      {/* 3. BROWSER AUTOPLAY UNLOCKER - Now for COADMIN too */}
+      {!isAudioEnabled && hasManagerPower && (
         <div className="fixed inset-0 z-[100] bg-black/60 flex flex-col items-center justify-center text-white p-4 backdrop-blur-sm">
            <IoPlayCircleOutline size={70} className="mb-4 text-green-400" />
            <h2 className="text-xl font-bold mb-4">Enable Order Alerts?</h2>
@@ -121,7 +122,7 @@ const MyOrders = () => {
         <div className="flex items-center gap-4">
           <h1 className='text-xl font-black text-gray-900'>My Orders</h1>
           
-          {effectiveUser?.role === 'ADMIN' && (
+          {hasManagerPower && (
             <button 
               onClick={() => setIsMuted(!isMuted)}
               className={`p-2 rounded-full transition-all flex items-center gap-2 ${isMuted ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600 animate-pulse'}`}
@@ -132,7 +133,7 @@ const MyOrders = () => {
           )}
         </div>
         
-        {effectiveUser?.role === 'ADMIN' && (
+        {hasManagerPower && (
           <div className='flex flex-wrap gap-4 items-center justify-center'>
               <div className='bg-gray-100 px-4 py-2 rounded-lg border border-gray-300 text-center shadow-sm'>
                   <p className='text-sm text-gray-800 font-bold uppercase'>Total Gross Sales</p>
@@ -154,11 +155,12 @@ const MyOrders = () => {
           orders.map((order, index) => (
             <div
               key={order._id || index}
-              className={`order rounded-lg p-5 text-sm border bg-white mb-6 shadow-sm transition-all ${completedOrders[order._id] ? 'opacity-50 grayscale' : 'opacity-100'} ${effectiveUser?.role === 'ADMIN' ? 'border-l-8 border-l-primary-600' : ''}`}
+              className={`order rounded-lg p-5 text-sm border bg-white mb-6 shadow-sm transition-all ${completedOrders[order._id] ? 'opacity-50 grayscale' : 'opacity-100'} ${hasManagerPower ? 'border-l-8 border-l-primary-600' : ''}`}
             >
               <div className='flex justify-between items-start border-b-2 border-gray-200 pb-3 mb-3'>
                 <div className="flex gap-4 items-start">
-                  {effectiveUser?.role === 'ADMIN' && (
+                  {/* CHECKBOXES FOR ADMIN & COADMIN */}
+                  {hasManagerPower && (
                     <input 
                       type="checkbox" 
                       checked={!!completedOrders[order._id]}
