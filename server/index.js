@@ -19,18 +19,35 @@ import orderRouter from './route/order.route.js'
 import admin from "firebase-admin"
 import { readFile } from 'fs/promises'
 
-try {
-  const serviceAccount = JSON.parse(
-    await readFile(new URL('./config/serviceAccountKey.json', import.meta.url))
-  );
+const initializeFirebase = async () => {
+    try {
+        let serviceAccount;
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-  console.log("🔥 Firebase Admin Initialized Successfully");
-} catch (error) {
-  console.error("❌ Firebase Initialization Error:", error.message);
-}
+        // 1. Check if running on Cloud (Render)
+        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+            serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+            console.log("☁️ Using Firebase credentials from Env Variable");
+        } 
+        // 2. Otherwise use local file
+        else {
+            serviceAccount = JSON.parse(
+                await readFile(new URL('./config/serviceAccountKey.json', import.meta.url))
+            );
+            console.log("💻 Using Firebase credentials from local file");
+        }
+
+        if (!admin.apps.length) {
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+        }
+        console.log("🔥 Firebase Admin Initialized Successfully");
+    } catch (error) {
+        console.error("❌ Firebase Initialization Error:", error.message);
+    }
+};
+
+initializeFirebase();
 // --- FIREBASE ADMIN INITIALIZATION END ---
 
 const app = express()
