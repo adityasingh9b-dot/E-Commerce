@@ -20,7 +20,6 @@ const UserMenu = ({close}) => {
           const response = await Axios({
              ...SummaryApi.logout
           })
-          console.log("logout",response)
           if(response.data.success){
             if(close){
               close()
@@ -31,7 +30,6 @@ const UserMenu = ({close}) => {
             navigate("/")
           }
         } catch (error) {
-          console.log(error)
           AxiosToastError(error)
         }
    }
@@ -41,11 +39,21 @@ const UserMenu = ({close}) => {
         close()
       }
    }
+
+   // Role checks
+   const isMainAdmin = user.role === "ADMIN";
+   const isCoAdmin = user.role === "COADMIN";
+
   return (
     <div>
         <div className='font-semibold'>My Account</div>
         <div className='text-sm flex items-center gap-2'>
-          <span className='max-w-52 text-ellipsis line-clamp-1'>{user.name || user.mobile} <span className='text-medium text-red-600'>{user.role === "ADMIN" ? "(Admin)" : "" }</span></span>
+          <span className='max-w-52 text-ellipsis line-clamp-1'>
+            {user.name || user.mobile} 
+            <span className='text-medium text-red-600 ml-1'>
+                {isMainAdmin ? "(Admin)" : isCoAdmin ? "(Co-Admin)" : ""}
+            </span>
+          </span>
           <Link onClick={handleClose} to={"/dashboard/profile"} className='hover:text-primary-200'>
             <HiOutlineExternalLink size={15}/>
           </Link>
@@ -54,35 +62,25 @@ const UserMenu = ({close}) => {
         <Divider/>
 
         <div className='text-sm grid gap-1'>
+            {/* --- ADMIN ONLY LINKS: Hidden for COADMIN --- */}
             {
-              isAdmin(user.role) && (
-                <Link onClick={handleClose} to={"/dashboard/category"} className='px-2 hover:bg-orange-200 py-1'>Category</Link>
+              isMainAdmin && (
+                <>
+                    <Link onClick={handleClose} to={"/dashboard/category"} className='px-2 hover:bg-orange-200 py-1'>Category</Link>
+                    <Link onClick={handleClose} to={"/dashboard/subcategory"} className='px-2 hover:bg-orange-200 py-1'>Sub Category</Link>
+                    <Link onClick={handleClose} to={"/dashboard/upload-product"} className='px-2 hover:bg-orange-200 py-1'>Upload Product</Link>
+                    <Link onClick={handleClose} to={"/dashboard/product"} className='px-2 hover:bg-orange-200 py-1'>Product</Link>
+                </>
               )
             }
 
-            {
-              isAdmin(user.role) && (
-                <Link onClick={handleClose} to={"/dashboard/subcategory"} className='px-2 hover:bg-orange-200 py-1'>Sub Category</Link>
-              )
-            }
+            {/* --- VISIBLE TO BOTH ADMIN & COADMIN --- */}
+            <Link onClick={handleClose} to={"/dashboard/myorders"} className='px-2 hover:bg-orange-200 py-1 font-semibold text-primary-100'>My Orders</Link>
 
-            {
-              isAdmin(user.role) && (
-                <Link onClick={handleClose} to={"/dashboard/upload-product"} className='px-2 hover:bg-orange-200 py-1'>Upload Product</Link>
-              )
-            }
-
-            {
-              isAdmin(user.role) && (
-                <Link onClick={handleClose} to={"/dashboard/product"} className='px-2 hover:bg-orange-200 py-1'>Product</Link>
-              )
-            }
-
-            <Link onClick={handleClose} to={"/dashboard/myorders"} className='px-2 hover:bg-orange-200 py-1'>My Orders</Link>
-
+            {/* --- BASIC LINKS FOR EVERYONE --- */}
             <Link onClick={handleClose} to={"/dashboard/address"} className='px-2 hover:bg-orange-200 py-1'>Save Address</Link>
 
-            <button onClick={handleLogout} className='text-left px-2 hover:bg-orange-200 py-1'>Log Out</button>
+            <button onClick={handleLogout} className='text-left px-2 hover:bg-orange-200 py-1 text-red-500'>Log Out</button>
 
         </div>
     </div>

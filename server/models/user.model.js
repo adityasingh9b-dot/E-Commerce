@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
     },
     last_login_date : {
         type : Date,
-        default : ""
+        default : null // Fixed: Date field should be null, not empty string ""
     },
     status : {
         type : String,
@@ -63,11 +63,11 @@ const userSchema = new mongoose.Schema({
     },
     forgot_password_expiry : {
         type : Date,
-        default : ""
+        default : null // Fixed: Date field should be null
     },
     role : {
         type : String,
-        enum : ['ADMIN',"USER"],
+        enum : ['ADMIN', "USER", "COADMIN"], // Added COADMIN for your dashboard access
         default : "USER"
     }
 },{
