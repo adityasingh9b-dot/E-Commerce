@@ -15,6 +15,24 @@ import cartRouter from './route/cart.route.js'
 import addressRouter from './route/address.route.js'
 import orderRouter from './route/order.route.js'
 
+// --- FIREBASE ADMIN INITIALIZATION START ---
+import admin from "firebase-admin"
+import { readFile } from 'fs/promises'
+
+try {
+  const serviceAccount = JSON.parse(
+    await readFile(new URL('./config/serviceAccountKey.json', import.meta.url))
+  );
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+  console.log("🔥 Firebase Admin Initialized Successfully");
+} catch (error) {
+  console.error("❌ Firebase Initialization Error:", error.message);
+}
+// --- FIREBASE ADMIN INITIALIZATION END ---
+
 const app = express()
 
 app.use(cors({
@@ -28,9 +46,6 @@ app.use(cors({
   credentials: true
 }));
 
-
-
-
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
@@ -42,7 +57,6 @@ app.use(helmet({
 const PORT = process.env.PORT || 8080
 
 app.get("/",(request,response)=>{
-    ///server to client
     response.json({
         message : "Server is running " + PORT
     })
@@ -62,5 +76,3 @@ connectDB().then(() => {
     console.log("Server is running", PORT);
   });
 });
-
-

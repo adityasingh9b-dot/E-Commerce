@@ -4,6 +4,36 @@ import CartProductModel from "../models/cartproduct.model.js";
 import OrderModel from "../models/order.model.js";
 import UserModel from "../models/user.model.js";
 import ProductModel from "../models/product.model.js";
+import admin from "firebase-admin";
+
+// ✅ Helper to send notification to Admin App
+const sendOrderNotification = async (orderId, amount) => {
+  const message = {
+    topic: "all_admins", 
+    notification: {
+      title: "New Order Received! 🛍️",
+      body: `Order ID: ${orderId} | Amount: ₹${amount}`,
+    },
+    data: {
+      action: "RING", 
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
+    },
+    android: {
+      priority: "high",
+      notification: {
+        sound: "default",
+        channel_id: "high_importance_channel",
+      },
+    },
+  };
+
+  try {
+    await admin.messaging().send(message);
+    console.log("✅ Notification sent to admins");
+  } catch (error) {
+    console.error("❌ FCM Error:", error);
+  }
+};
 
 // ✅ Cash on Delivery
 export async function CashOnDeliveryOrderController(request, response) {
@@ -13,16 +43,15 @@ export async function CashOnDeliveryOrderController(request, response) {
 
     const orderId = `ORD-${new mongoose.Types.ObjectId()}`;
 
-const products = list_items.map((el) => ({
-  productId: new mongoose.Types.ObjectId(el.productId._id),
-  product_details: {
-    name: el.productId.name,
-    image: el.productId.image,
-    price: el.productId.price,
-    quantity: el.quantity,
-  },
-}));
-
+    const products = list_items.map((el) => ({
+      productId: new mongoose.Types.ObjectId(el.productId._id),
+      product_details: {
+        name: el.productId.name,
+        image: el.productId.image,
+        price: el.productId.price,
+        quantity: el.quantity,
+      },
+    }));
 
     const newOrder = await OrderModel.create({
       userId,
@@ -45,6 +74,9 @@ const products = list_items.map((el) => ({
     // Clear cart
     await CartProductModel.deleteMany({ userId });
     await UserModel.updateOne({ _id: userId }, { shopping_cart: [] });
+
+    // 🔥 NOTIFY ADMIN IMMEDIATELY
+    sendOrderNotification(orderId, totalAmt);
 
     return response.json({
       message: "Order placed successfully",
@@ -190,6 +222,9 @@ export async function webhookStripe(request, response) {
       });
       await CartProductModel.deleteMany({ userId });
 
+      // 🔥 NOTIFY ADMIN FOR ONLINE PAYMENT
+      sendOrderNotification(newOrder.orderId, newOrder.totalAmt);
+
       break;
     }
     default:
@@ -198,14 +233,12 @@ export async function webhookStripe(request, response) {
 
   response.json({ received: true });
 }
-// ✅ GET all orders — admin gets all, user gets their own
+
+// ✅ GET all orders
 export async function getOrderDetailsController(request, response) {
   try {
-    console.log("🔍 getOrderDetailsController called; request.userId =", request.userId);
-
     const userId = request.userId;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      console.error("❌ Invalid userId:", userId);
       return response.status(400).json({
         message: "Invalid user id",
         error: true,
@@ -222,8 +255,6 @@ export async function getOrderDetailsController(request, response) {
       });
     }
 
-    console.log("✅ Found user:", user._id, "role:", user.role);
-
     const isAdmin = user.role === "ADMIN";
     const filter = isAdmin ? {} : { userId };
 
@@ -234,15 +265,11 @@ export async function getOrderDetailsController(request, response) {
       .populate('products.productId', 'name image price discount quantity')
       .lean();
 
-    // Optionally filter out any corrupted order (invalid productId)
     const validOrders = orders.filter(order =>
       order.products.every(p =>
         mongoose.Types.ObjectId.isValid(p.productId?._id || p.productId)
       )
     );
-
-    console.log("📦 Total orders fetched:", orders.length);
-    console.log("✅ Valid orders after filtering:", validOrders.length);
 
     return response.json({
       message: "Order list",
@@ -252,7 +279,6 @@ export async function getOrderDetailsController(request, response) {
     });
 
   } catch (error) {
-    console.error("🔥 Error in getOrderDetailsController:", error);
     return response.status(500).json({
       message: error.message || "Internal server error",
       error: true,
@@ -261,16 +287,11 @@ export async function getOrderDetailsController(request, response) {
   }
 }
 
-
+// ✅ Delete Order
 export async function deleteOrderController(req, res) {
   try {
     const orderId = req.params.id;
-    console.log("🗑️ DELETE called for order ID:", orderId);
-    console.log("🔐 User attempting delete:", req.userId);
-
-    // 🛑 Validate Mongo ID format
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      console.error("❌ Invalid ObjectId:", orderId);
       return res.status(400).json({
         message: "Invalid order ID",
         error: true,
@@ -278,13 +299,9 @@ export async function deleteOrderController(req, res) {
       });
     }
 
-    // ✅ Attempt deletion
     const deleted = await OrderModel.findByIdAndDelete(orderId);
-    console.log("📦 Deleted Order:", deleted);
 
-    // ❌ Nothing was deleted
     if (!deleted) {
-      console.warn("⚠️ No order found with ID:", orderId);
       return res.status(404).json({
         message: "Order not found",
         error: true,
@@ -292,14 +309,12 @@ export async function deleteOrderController(req, res) {
       });
     }
 
-    // ✅ Success
     return res.json({
       message: "Order deleted successfully",
       success: true,
       error: false,
     });
   } catch (error) {
-    console.error("🔥 Error in deleteOrderController:", error);
     return res.status(500).json({
       message: error.message || error,
       error: true,
@@ -307,6 +322,3 @@ export async function deleteOrderController(req, res) {
     });
   }
 }
-
-
-
