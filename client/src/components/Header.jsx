@@ -27,31 +27,30 @@ const Header = () => {
     const { totalPrice, totalQty } = useGlobalContext()
     const [openCartSection, setOpenCartSection] = useState(false)
 
+    // Role checks
+    const isCoAdmin = user?.role === "COADMIN";
+    const isAdminOrCoAdmin = user?.role === "ADMIN" || user?.role === "COADMIN";
+
     // --- SIREN STATES & REFS ---
     const [lastOrderCount, setLastOrderCount] = useState(0)
     const [isSirenActive, setIsSirenActive] = useState(false)
-    const audioRef = useRef(null) // Initialize inside useEffect or function for mobile
+    const audioRef = useRef(null) 
 
     // 1. Order Monitoring Logic
     useEffect(() => {
-        // Init audio object
         if (!audioRef.current) {
             audioRef.current = new Audio(sirenFile);
         }
 
-        if (user?.role !== "ADMIN") return;
+        // SIREN: Now enabled for both ADMIN and COADMIN
+        if (!isAdminOrCoAdmin) return;
 
         const checkNewOrders = async () => {
             try {
                 const response = await Axios({ ...SummaryApi.getOrderItems });
-                
-                // Robust check for data length (handles response.data or response.data.data)
                 const orderList = response.data?.data || response.data || [];
                 const currentCount = orderList.length;
 
-                console.log("Order Check:", currentCount, "Last:", lastOrderCount);
-
-                // logic: trigger only if count increases and it's not the first load
                 if (lastOrderCount !== 0 && currentCount > lastOrderCount) {
                     playSiren();
                 }
@@ -61,19 +60,18 @@ const Header = () => {
             }
         };
 
-        const interval = setInterval(checkNewOrders, 30000); // 30 seconds
+        const interval = setInterval(checkNewOrders, 30000); 
         return () => clearInterval(interval);
-    }, [user, lastOrderCount]);
+    }, [user, lastOrderCount, isAdminOrCoAdmin]);
 
     // 2. Play Siren Function
     const playSiren = () => {
         if (audioRef.current) {
             audioRef.current.loop = true;
-            audioRef.current.play().catch(e => console.log("Audio play blocked by browser", e));
+            audioRef.current.play().catch(e => console.log("Audio play blocked", e));
         }
         setIsSirenActive(true);
 
-        // Alert is better for mobile debugging than just Notifications
         if (Notification.permission === "granted") {
             const n = new Notification("🚨 Naya Order Aaya Hai!", {
                 body: "Check karo Arora Store ka naya order.",
@@ -81,11 +79,10 @@ const Header = () => {
             });
             n.onclick = () => {
                 window.focus();
-                navigate("/dashboard/orders");
+                navigate("/dashboard/myorders");
                 stopSiren();
             };
         } else {
-            // Fallback if notifications are off
             alert("🚨 NAYA ORDER MILA HAI!");
         }
     };
@@ -111,13 +108,14 @@ const Header = () => {
     const handleCloseUserMenu = () => { setOpenUserMenu(false) }
     const handleMobileUser = () => {
         if (!user._id) { navigate("/login"); return; }
-        navigate("/user")
+        // Mobile par bhi manager orders hi dekhega
+        navigate(isCoAdmin ? "/dashboard/myorders" : "/user")
     }
 
     return (
         <header className='h-24 lg:h-20 lg:shadow-md sticky top-0 z-40 flex flex-col justify-center gap-1 bg-white'>
-            {/* Siren Alert Strip */}
-            {isSirenActive && user?.role === "ADMIN" && (
+            {/* Siren Alert Strip - For Admin & CoAdmin */}
+            {isSirenActive && isAdminOrCoAdmin && (
                 <div className='bg-red-600 text-white text-center py-2 animate-pulse flex justify-center items-center gap-4 fixed top-0 left-0 w-full z-50'>
                     <span className='font-bold'>🚨 NAYA ORDER MILA HAI!</span>
                     <button onClick={stopSiren} className='bg-white text-red-600 px-4 py-1 rounded-full font-bold text-sm shadow-lg'>
@@ -130,15 +128,19 @@ const Header = () => {
                 !(isSearchPage && isMobile) && (
                     <div className='container mx-auto flex items-center px-2 justify-between'>
                         <div className='h-full'>
-                            <Link to={"/"} className='h-full flex justify-center items-center'>
+                            {/* Logo Link Restriction: Manager seedha MyOrders pe jayega */}
+                            <Link to={isCoAdmin ? "/dashboard/myorders" : "/"} className='h-full flex justify-center items-center'>
                                 <img src={logo} width={170} height={60} alt='logo' className='hidden lg:block' />
                                 <img src={logo} width={120} height={60} alt='logo' className='lg:hidden' />
                             </Link>
                         </div>
 
-                        <div className='hidden lg:block'>
-                            <Search />
-                        </div>
+                        {/* Search hidden for COADMIN */}
+                        {!isCoAdmin && (
+                            <div className='hidden lg:block'>
+                                <Search />
+                            </div>
+                        )}
 
                         <div className=''>
                             <button className='text-neutral-600 lg:hidden' onClick={handleMobileUser}>
@@ -150,13 +152,13 @@ const Header = () => {
                                     user?._id ? (
                                         <div className='relative'>
                                             <div onClick={() => setOpenUserMenu(preve => !preve)} className='flex select-none items-center gap-1 cursor-pointer'>
-                                                <p>{user.name || "Account"}</p>
+                                                <p className='font-bold'>{user.name || "Account"}</p>
                                                 {openUserMenu ? <GoTriangleUp size={25} /> : <GoTriangleDown size={25} />}
                                             </div>
                                             {
                                                 openUserMenu && (
                                                     <div className='absolute right-0 top-12'>
-                                                        <div className='bg-white rounded p-4 min-w-52 lg:shadow-lg'>
+                                                        <div className='bg-white rounded p-4 min-w-52 lg:shadow-lg border'>
                                                             <UserMenu close={handleCloseUserMenu} />
                                                         </div>
                                                     </div>
@@ -167,32 +169,39 @@ const Header = () => {
                                         <button onClick={redirectToLoginPage} className='text-lg px-2'>Login</button>
                                     )
                                 }
-                                <button onClick={() => setOpenCartSection(true)} className='flex items-center gap-2 bg-green-800 hover:bg-green-700 px-3 py-2 rounded text-white'>
-                                    <div className='animate-bounce'>
-                                        <BsCart4 size={26} />
-                                    </div>
-                                    <div className='font-semibold text-sm'>
-                                        {cartItem[0] ? (
-                                            <div>
-                                                <p>{totalQty} Items</p>
-                                                <p>{DisplayPriceInRupees(totalPrice)}</p>
-                                            </div>
-                                        ) : (
-                                            <p>My Cart</p>
-                                        )}
-                                    </div>
-                                </button>
+                                
+                                {/* Cart button hidden for COADMIN */}
+                                {!isCoAdmin && (
+                                    <button onClick={() => setOpenCartSection(true)} className='flex items-center gap-2 bg-green-800 hover:bg-green-700 px-3 py-2 rounded text-white'>
+                                        <div className='animate-bounce'>
+                                            <BsCart4 size={26} />
+                                        </div>
+                                        <div className='font-semibold text-sm'>
+                                            {cartItem[0] ? (
+                                                <div>
+                                                    <p>{totalQty} Items</p>
+                                                    <p>{DisplayPriceInRupees(totalPrice)}</p>
+                                                </div>
+                                            ) : (
+                                                <p>My Cart</p>
+                                            )}
+                                        </div>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
                 )
             }
 
-            <div className='container mx-auto px-2 lg:hidden'>
-                <Search />
-            </div>
+            {/* Mobile Search hidden for COADMIN */}
+            {!isCoAdmin && (
+                <div className='container mx-auto px-2 lg:hidden'>
+                    <Search />
+                </div>
+            )}
 
-            {openCartSection && (
+            {openCartSection && !isCoAdmin && (
                 <DisplayCartItem close={() => setOpenCartSection(false)} />
             )}
         </header>
