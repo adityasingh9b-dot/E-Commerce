@@ -21,7 +21,7 @@ const Login = () => {
 
   const isValid = Object.values(data).every(el => el);
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await Axios({
@@ -48,11 +48,18 @@ const Login = () => {
         setData({ email: "", password: "" });
 
         const role = user?.role || '';
+        
         if (role === "ADMIN") {
           navigate("/admin");
-        } else {
+        } 
+        else if (role === "COADMIN") {
+          
+          navigate("/dashboard/myorders");
+        } 
+        else {
           navigate("/");
         }
+
       }
     } catch (error) {
       AxiosToastError(error);
