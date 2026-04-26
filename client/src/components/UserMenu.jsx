@@ -8,7 +8,6 @@ import { logout } from '../store/userSlice'
 import toast from 'react-hot-toast'
 import AxiosToastError from '../utils/AxiosToastError'
 import { HiOutlineExternalLink } from "react-icons/hi";
-import isAdmin from '../utils/isAdmin'
 
 const UserMenu = ({close}) => {
    const user = useSelector((state)=> state.user)
@@ -51,18 +50,22 @@ const UserMenu = ({close}) => {
           <span className='max-w-52 text-ellipsis line-clamp-1'>
             {user.name || user.mobile} 
             <span className='text-medium text-red-600 ml-1'>
-                {isMainAdmin ? "(Admin)" : isCoAdmin ? "(Co-Admin)" : ""}
+                {isMainAdmin ? "(Admin)" : isCoAdmin ? "(Manager)" : ""}
             </span>
           </span>
-          <Link onClick={handleClose} to={"/dashboard/profile"} className='hover:text-primary-200'>
-            <HiOutlineExternalLink size={15}/>
-          </Link>
+          
+          {/* PROFILE LINK: Hide for COADMIN (Security check) */}
+          {!isCoAdmin && (
+            <Link onClick={handleClose} to={"/dashboard/profile"} className='hover:text-primary-200'>
+                <HiOutlineExternalLink size={15}/>
+            </Link>
+          )}
         </div>
 
         <Divider/>
 
         <div className='text-sm grid gap-1'>
-            {/* --- ADMIN ONLY LINKS: Hidden for COADMIN --- */}
+            {/* --- ADMIN ONLY: Hidden for COADMIN --- */}
             {
               isMainAdmin && (
                 <>
@@ -74,13 +77,17 @@ const UserMenu = ({close}) => {
               )
             }
 
-            {/* --- VISIBLE TO BOTH ADMIN & COADMIN --- */}
-            <Link onClick={handleClose} to={"/dashboard/myorders"} className='px-2 hover:bg-orange-200 py-1 font-semibold text-primary-100'>My Orders</Link>
+            {/* --- DASHBOARD: Visible to Admin and Co-Admin --- */}
+            <Link onClick={handleClose} to={"/dashboard/myorders"} className='px-2 hover:bg-orange-200 py-1 font-bold text-primary-100'>
+                {isCoAdmin ? "Order Dashboard 🚀" : "My Orders"}
+            </Link>
 
-            {/* --- BASIC LINKS FOR EVERYONE --- */}
-            <Link onClick={handleClose} to={"/dashboard/address"} className='px-2 hover:bg-orange-200 py-1'>Save Address</Link>
+            {/* --- SAVE ADDRESS: Hidden for COADMIN (Prevention from fake orders/memory bloat) --- */}
+            {!isCoAdmin && (
+               <Link onClick={handleClose} to={"/dashboard/address"} className='px-2 hover:bg-orange-200 py-1'>Save Address</Link>
+            )}
 
-            <button onClick={handleLogout} className='text-left px-2 hover:bg-orange-200 py-1 text-red-500'>Log Out</button>
+            <button onClick={handleLogout} className='text-left px-2 hover:bg-orange-200 py-1 text-red-500 font-semibold'>Log Out</button>
 
         </div>
     </div>
