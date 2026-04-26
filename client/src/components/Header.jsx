@@ -42,7 +42,7 @@ const Header = () => {
             audioRef.current = new Audio(sirenFile);
         }
 
-        // SIREN: Now enabled for both ADMIN and COADMIN
+        // --- FIXED: Ab check har bar chalega agar user Admin ya CoAdmin hai ---
         if (!isAdminOrCoAdmin) return;
 
         const checkNewOrders = async () => {
@@ -50,6 +50,9 @@ const Header = () => {
                 const response = await Axios({ ...SummaryApi.getOrderItems });
                 const orderList = response.data?.data || response.data || [];
                 const currentCount = orderList.length;
+
+                // Log for debugging
+                console.log("Monitoring Orders - Role:", user?.role, "Count:", currentCount);
 
                 if (lastOrderCount !== 0 && currentCount > lastOrderCount) {
                     playSiren();
@@ -60,9 +63,11 @@ const Header = () => {
             }
         };
 
+        // Initial check and then interval
+        checkNewOrders();
         const interval = setInterval(checkNewOrders, 30000); 
         return () => clearInterval(interval);
-    }, [user, lastOrderCount, isAdminOrCoAdmin]);
+    }, [user, lastOrderCount, isAdminOrCoAdmin]); // Added isAdminOrCoAdmin to dependency
 
     // 2. Play Siren Function
     const playSiren = () => {
@@ -74,12 +79,13 @@ const Header = () => {
 
         if (Notification.permission === "granted") {
             const n = new Notification("🚨 Naya Order Aaya Hai!", {
-                body: "Check karo Arora Store ka naya order.",
+                body: "Check karo store ka naya order.",
                 icon: logo
             });
             n.onclick = () => {
                 window.focus();
-                navigate("/dashboard/myorders");
+                // --- FIXED: Manager ko sahi page par bhejne ke liye ---
+                navigate(isCoAdmin ? "/dashboard/myorders" : "/dashboard/orders");
                 stopSiren();
             };
         } else {
@@ -108,13 +114,12 @@ const Header = () => {
     const handleCloseUserMenu = () => { setOpenUserMenu(false) }
     const handleMobileUser = () => {
         if (!user._id) { navigate("/login"); return; }
-        // Mobile par bhi manager orders hi dekhega
         navigate(isCoAdmin ? "/dashboard/myorders" : "/user")
     }
 
     return (
         <header className='h-24 lg:h-20 lg:shadow-md sticky top-0 z-40 flex flex-col justify-center gap-1 bg-white'>
-            {/* Siren Alert Strip - For Admin & CoAdmin */}
+            {/* Siren Alert Strip - Enabled for COADMIN */}
             {isSirenActive && isAdminOrCoAdmin && (
                 <div className='bg-red-600 text-white text-center py-2 animate-pulse flex justify-center items-center gap-4 fixed top-0 left-0 w-full z-50'>
                     <span className='font-bold'>🚨 NAYA ORDER MILA HAI!</span>
@@ -128,14 +133,12 @@ const Header = () => {
                 !(isSearchPage && isMobile) && (
                     <div className='container mx-auto flex items-center px-2 justify-between'>
                         <div className='h-full'>
-                            {/* Logo Link Restriction: Manager seedha MyOrders pe jayega */}
                             <Link to={isCoAdmin ? "/dashboard/myorders" : "/"} className='h-full flex justify-center items-center'>
                                 <img src={logo} width={170} height={60} alt='logo' className='hidden lg:block' />
                                 <img src={logo} width={120} height={60} alt='logo' className='lg:hidden' />
                             </Link>
                         </div>
 
-                        {/* Search hidden for COADMIN */}
                         {!isCoAdmin && (
                             <div className='hidden lg:block'>
                                 <Search />
@@ -170,7 +173,6 @@ const Header = () => {
                                     )
                                 }
                                 
-                                {/* Cart button hidden for COADMIN */}
                                 {!isCoAdmin && (
                                     <button onClick={() => setOpenCartSection(true)} className='flex items-center gap-2 bg-green-800 hover:bg-green-700 px-3 py-2 rounded text-white'>
                                         <div className='animate-bounce'>
@@ -194,7 +196,6 @@ const Header = () => {
                 )
             }
 
-            {/* Mobile Search hidden for COADMIN */}
             {!isCoAdmin && (
                 <div className='container mx-auto px-2 lg:hidden'>
                     <Search />
