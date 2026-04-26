@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import fetchUserDetails from './utils/fetchUserDetails';
 import { setUserDetails } from './store/userSlice';
 import { setAllCategory, setAllSubCategory, setLoadingCategory } from './store/productSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Axios from './utils/Axios';
 import SummaryApi from './common/SummaryApi';
 import GlobalProvider from './provider/GlobalProvider';
@@ -16,6 +16,10 @@ import CartMobileLink from './components/CartMobile';
 function App() {
   const dispatch = useDispatch()
   const location = useLocation()
+  const navigate = useNavigate()
+  
+  // Redux store se user state nikaali
+  const user = useSelector((state) => state.user)
 
   const fetchUser = async () => {
     const userData = await fetchUserDetails()
@@ -70,15 +74,40 @@ function App() {
     fetchSubCategory()
   }, [])
 
+  // --- 🛡️ MANAGER (COADMIN) ACCESS CONTROL ---
+  useEffect(() => {
+    // Agar user logged in hai aur uska role COADMIN hai
+    if (user?._id && user?.role === "COADMIN") {
+      
+      // Ye raste Manager ke liye allowed hain
+      const allowedPaths = ["/dashboard/myorders", "/dashboard/profile"];
+      
+      // Agar wo kisi aisi jagah hai jo allowed nahi hai (Home, Shop, Cart etc.)
+      const isPathAllowed = allowedPaths.some(path => location.pathname.startsWith(path));
+
+      if (!isPathAllowed) {
+        // Dhakke maar ke wapas MyOrders par bhejo
+        // replace: true history record clean rakhta hai
+        navigate("/dashboard/myorders", { replace: true });
+      }
+    }
+  }, [user, location.pathname, navigate]);
+
   return (
     <GlobalProvider>
       <Header />
+      
       <main className='min-h-[78vh]'>
         <Outlet />
       </main>
-      <Footer />
+
+      {/* Manager ko extra navigation ya footer dikhane ki zarurat nahi hai */}
+      {user?.role !== "COADMIN" && <Footer />}
+      
       <Toaster />
-      {location.pathname !== '/checkout' && (
+
+      {/* Checkout aur Manager dono ke liye Cart floating link hide kar diya */}
+      {location.pathname !== '/checkout' && user?.role !== "COADMIN" && (
         <CartMobileLink />
       )}
     </GlobalProvider>
@@ -86,4 +115,3 @@ function App() {
 }
 
 export default App
-
