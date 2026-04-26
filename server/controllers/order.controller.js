@@ -234,7 +234,7 @@ export async function webhookStripe(request, response) {
   response.json({ received: true });
 }
 
-// ✅ GET all orders
+// ✅ GET all orders (Fixed for Manager/COADMIN access)
 export async function getOrderDetailsController(request, response) {
   try {
     const userId = request.userId;
@@ -255,8 +255,14 @@ export async function getOrderDetailsController(request, response) {
       });
     }
 
-    const isAdmin = user.role === "ADMIN";
-    const filter = isAdmin ? {} : { userId };
+    // --- FIX STARTS HERE ---
+    // Hum check karenge ki kya user ADMIN hai ya COADMIN
+    const isPrivileged = user.role === "ADMIN" || user.role === "COADMIN";
+    
+    // Agar Privileged hai toh empty filter {} (saare orders)
+    // Agar normal user hai toh sirf uske apne orders { userId }
+    const filter = isPrivileged ? {} : { userId };
+    // --- FIX ENDS HERE ---
 
     const orders = await OrderModel.find(filter)
       .sort({ createdAt: -1 })
